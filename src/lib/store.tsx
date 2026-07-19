@@ -25,7 +25,9 @@ export interface Teacher {
   id: string;
   name: string;
   classIds: string[];
+  code: string;
 }
+
 
 export interface Material {
   id: string;
@@ -65,10 +67,12 @@ export type IndicatorCategory = "Adab" | "Tarbiyah";
 export interface Indicator {
   id: string;
   classId: string;
+  month: string; // YYYY-MM
   category: IndicatorCategory;
   text: string;
   title?: string; // Adab: judul (heading), text = sub judul
 }
+
 
 export type ObservationValue = "BB" | "MB" | "BSH" | "BSB";
 
@@ -96,7 +100,9 @@ interface StoreState {
   adabTitles: string[];
   observations: ObservationRecord[];
   announcements: Record<string, string>; // classId -> text
+  adminCode: string;
 }
+
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const today = new Date().toISOString().slice(0, 10);
