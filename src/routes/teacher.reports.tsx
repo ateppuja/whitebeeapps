@@ -90,6 +90,57 @@ function ReportsPage() {
     }
     const rangeLabel = months.length === 1 ? labelMonth(months[0]) : `${labelMonth(months[0])} – ${labelMonth(months[months.length-1])}`;
 
+    const VALS = ["BB","MB","BSH","BSB"] as const;
+    const green = "#7AB648";
+
+    const buildAdabTable = (catIndicators: typeof indicators, rec: typeof observations[number] | undefined) => {
+      // group by title
+      const groups: Record<string, typeof catIndicators> = {};
+      catIndicators.forEach((i) => {
+        const k = i.title || "Umum";
+        (groups[k] ||= []).push(i);
+      });
+      const headerStyle = `background:${green};color:#fff;font-weight:bold;text-align:center;`;
+      let html = `<table border="1" cellspacing="0" cellpadding="6" width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;">
+        <thead>
+          <tr>
+            <th rowspan="2" style="${headerStyle}width:40px;">NO</th>
+            <th rowspan="2" style="${headerStyle}">DAFTAR ADAB</th>
+            <th colspan="4" style="${headerStyle}">PENGAMATAN ORANGTUA</th>
+            <th rowspan="2" style="${headerStyle}">KETERANGAN</th>
+          </tr>
+          <tr>${VALS.map((v)=>`<th style="${headerStyle}width:40px;">${v}</th>`).join("")}</tr>
+        </thead><tbody>`;
+      let no = 1;
+      Object.entries(groups).forEach(([title, items]) => {
+        html += `<tr><td colspan="7" align="center" style="font-weight:bold;background:#f2f2f2;">${title}</td></tr>`;
+        items.forEach((ind) => {
+          const e = rec?.entries.find((x) => x.indicatorId === ind.id);
+          const cells = VALS.map((v) => `<td align="center">${e?.value === v ? "✓" : ""}</td>`).join("");
+          html += `<tr><td align="center">${no++}.</td><td>${ind.text}</td>${cells}<td>${e?.note ?? ""}</td></tr>`;
+        });
+      });
+      html += `</tbody></table>`;
+      return html;
+    };
+
+    const buildTarbiyahTable = (catIndicators: typeof indicators, rec: typeof observations[number] | undefined) => {
+      const headerStyle = `background:${green};color:#fff;font-weight:bold;text-align:center;`;
+      const rows = catIndicators.map((ind, idx) => {
+        const e = rec?.entries.find((x) => x.indicatorId === ind.id);
+        const cells = VALS.map((v) => `<td align="center">${e?.value === v ? "✓" : ""}</td>`).join("");
+        return `<tr><td align="center">${idx+1}.</td><td>${ind.text}</td>${cells}<td>${e?.note ?? ""}</td></tr>`;
+      }).join("");
+      return `<table border="1" cellspacing="0" cellpadding="6" width="100%" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:11pt;">
+        <thead><tr>
+          <th rowspan="2" style="${headerStyle}width:40px;">NO</th>
+          <th rowspan="2" style="${headerStyle}">DAFTAR TARBIYAH</th>
+          <th colspan="4" style="${headerStyle}">PENGAMATAN ORANGTUA</th>
+          <th rowspan="2" style="${headerStyle}">KETERANGAN</th>
+        </tr><tr>${VALS.map((v)=>`<th style="${headerStyle}width:40px;">${v}</th>`).join("")}</tr></thead>
+        <tbody>${rows}</tbody></table>`;
+    };
+
     const studentBlocks = targets.map((s) => {
       const monthBlocks = months.map((mo) => {
         const rec = observations.find((o) => o.studentId === s.id && o.month === mo);
@@ -97,15 +148,12 @@ function ReportsPage() {
         if (catIndicators.length === 0) {
           return `<h4>${labelMonth(mo)}</h4><p><i>Belum ada indikator untuk bulan ini.</i></p>`;
         }
-        const rows = catIndicators.map((ind) => {
-          const e = rec?.entries.find((x) => x.indicatorId === ind.id);
-          const label = cat === "Adab" && ind.title ? `<b>${ind.title}</b> — ${ind.text}` : ind.text;
-          return `<tr><td>${label}</td><td align="center">${e?.value ?? "-"}</td><td>${e?.note ?? ""}</td></tr>`;
-        }).join("");
-        return `<h4>${labelMonth(mo)}</h4><table border="1" cellspacing="0" cellpadding="4" width="100%"><tr><th>Indikator</th><th>Nilai</th><th>Catatan</th></tr>${rows}</table>`;
+        const table = cat === "Adab" ? buildAdabTable(catIndicators, rec) : buildTarbiyahTable(catIndicators, rec);
+        return `<h4>${labelMonth(mo)}</h4>${table}`;
       }).join("<br/>");
       return `<h2>${s.name}</h2>${monthBlocks}<hr/>`;
     }).join("");
+
 
 
     const html = `<html><head><meta charset="utf-8"><title>Laporan ${cat} - ${className}</title></head><body>
