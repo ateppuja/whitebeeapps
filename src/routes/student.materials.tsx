@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/student/materials")({ component: MaterialsPage });
 
 function MaterialsPage() {
-  const { subjects, materials } = useStore();
+  const { subjects, materials, students, user } = useStore();
+  const me = students.find((s) => s.id === user?.studentId);
+  const classMaterials = materials.filter((m) => m.classId === me?.classId);
   const [openId, setOpenId] = useState<string | null>(null);
 
   if (openId) {
     const s = subjects.find((x) => x.id === openId);
-    const list = materials.filter((m) => m.subjectId === openId);
+    const list = classMaterials.filter((m) => m.subjectId === openId);
     return (
       <div>
         <PageHeader title={s?.name ?? "Materi"} description={`${list.length} materi tersedia`}
@@ -44,7 +46,7 @@ function MaterialsPage() {
       <PageHeader title="Semua Materi" description="Pilih folder mata pelajaran." />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {subjects.map((s) => {
-          const count = materials.filter((m) => m.subjectId === s.id).length;
+          const count = classMaterials.filter((m) => m.subjectId === s.id).length;
           return (
             <button key={s.id} onClick={() => setOpenId(s.id)} className="text-left">
               <Card className="hover:shadow-md hover:border-primary/50 transition">

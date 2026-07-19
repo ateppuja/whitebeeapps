@@ -10,23 +10,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useStore, type Indicator, type IndicatorCategory } from "@/lib/store";
 import { confirmDelete, successToast } from "@/lib/swal";
 import { Heart, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { NoClassSelected } from "@/components/NoClassSelected";
 
 export const Route = createFileRoute("/teacher/indicators")({ component: IndicatorsPage });
 
 function IndicatorsPage() {
-  const { indicators, set, uid } = useStore();
+  const { indicators, set, uid, activeClassId, classes } = useStore();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Indicator | null>(null);
   const [category, setCategory] = useState<IndicatorCategory>("Adab");
   const [text, setText] = useState("");
+
+  const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
+  const classIndicators = indicators.filter((i) => i.classId === activeClassId);
 
   const openNew = (cat?: IndicatorCategory) => {
     setEditing(null); setCategory(cat ?? "Adab"); setText(""); setOpen(true);
   };
   const openEdit = (i: Indicator) => { setEditing(i); setCategory(i.category); setText(i.text); setOpen(true); };
   const save = () => {
-    if (!text.trim()) return;
-    const data: Indicator = { id: editing?.id ?? uid(), category, text };
+    if (!text.trim() || !activeClassId) return;
+    const data: Indicator = { id: editing?.id ?? uid(), classId: activeClassId, category, text };
     if (editing) set("indicators", indicators.map((x) => x.id === editing.id ? data : x));
     else set("indicators", [...indicators, data]);
     successToast("Tersimpan");
@@ -39,6 +43,8 @@ function IndicatorsPage() {
     }
   };
 
+  if (!activeClassId) return <NoClassSelected />;
+
   const groups: { cat: IndicatorCategory; icon: typeof Heart; tone: string }[] = [
     { cat: "Adab", icon: Heart, tone: "bg-primary/10 text-primary" },
     { cat: "Tarbiyah", icon: Sparkles, tone: "bg-accent text-accent-foreground" },
@@ -46,12 +52,12 @@ function IndicatorsPage() {
 
   return (
     <div>
-      <PageHeader title="Indikator Observasi" description="Kelola indikator Adab dan Tarbiyah."
+      <PageHeader title="Indikator Observasi" description={`Indikator Adab & Tarbiyah untuk ${className}.`}
         actions={<Button onClick={() => openNew()}><Plus className="h-4 w-4 mr-1" /> Indikator Baru</Button>} />
 
       <div className="grid gap-4 md:grid-cols-2">
         {groups.map(({ cat, icon: Icon, tone }) => {
-          const list = indicators.filter((i) => i.category === cat);
+          const list = classIndicators.filter((i) => i.category === cat);
           return (
             <Card key={cat}>
               <CardContent className="p-5">
@@ -85,6 +91,9 @@ function IndicatorsPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? "Edit Indikator" : "Indikator Baru"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
+            <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-xs">
+              Kelas: <span className="font-semibold text-primary">{className}</span>
+            </div>
             <div>
               <Label>Kategori</Label>
               <Select value={category} onValueChange={(v) => setCategory(v as IndicatorCategory)}>

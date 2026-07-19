@@ -11,23 +11,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useStore, type ScheduleItem } from "@/lib/store";
 import { confirmDelete, successToast } from "@/lib/swal";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { NoClassSelected } from "@/components/NoClassSelected";
 
 const DAYS: ScheduleItem["day"][] = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
 
 export const Route = createFileRoute("/teacher/schedule")({ component: SchedulePage });
 
 function SchedulePage() {
-  const { schedule, set, uid } = useStore();
+  const { schedule, set, uid, activeClassId, classes } = useStore();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ScheduleItem | null>(null);
   const [day, setDay] = useState<ScheduleItem["day"]>("Senin");
   const [subject, setSubject] = useState("");
 
+  const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
+  const classSchedule = schedule.filter((s) => s.classId === activeClassId);
+
   const openNew = () => { setEditing(null); setDay("Senin"); setSubject(""); setOpen(true); };
   const openEdit = (it: ScheduleItem) => { setEditing(it); setDay(it.day); setSubject(it.subject); setOpen(true); };
   const save = () => {
-    if (!subject.trim()) return;
-    const data: ScheduleItem = { id: editing?.id ?? uid(), day, subject };
+    if (!subject.trim() || !activeClassId) return;
+    const data: ScheduleItem = { id: editing?.id ?? uid(), classId: activeClassId, day, subject };
     if (editing) set("schedule", schedule.map((s) => s.id === editing.id ? data : s));
     else set("schedule", [...schedule, data]);
     successToast("Tersimpan");
@@ -40,11 +44,13 @@ function SchedulePage() {
     }
   };
 
-  const byDay = DAYS.map((d) => ({ day: d, items: schedule.filter((s) => s.day === d) }));
+  if (!activeClassId) return <NoClassSelected />;
+
+  const byDay = DAYS.map((d) => ({ day: d, items: classSchedule.filter((s) => s.day === d) }));
 
   return (
     <div>
-      <PageHeader title="Jadwal Pelajaran" description="Jadwal mingguan Senin - Jumat."
+      <PageHeader title="Jadwal Pelajaran" description={`Jadwal mingguan untuk ${className}.`}
         actions={<Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Tambah</Button>} />
       <Card>
         <CardContent className="p-0">
@@ -76,6 +82,9 @@ function SchedulePage() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? "Edit Jadwal" : "Tambah Jadwal"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
+            <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-xs">
+              Kelas: <span className="font-semibold text-primary">{className}</span>
+            </div>
             <div>
               <Label>Hari</Label>
               <Select value={day} onValueChange={(v) => setDay(v as ScheduleItem["day"])}>

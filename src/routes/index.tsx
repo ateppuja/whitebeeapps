@@ -5,39 +5,60 @@ import { swal, successToast } from "@/lib/swal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, Shield, BookOpen, User } from "lucide-react";
 
-export const Route = createFileRoute("/")({
-  component: LoginPage,
-});
+export const Route = createFileRoute("/")({ component: LoginPage });
 
-const ROLES: { id: Role; label: string; desc: string; icon: typeof Shield; demoName: string }[] = [
-  { id: "admin", label: "Admin", desc: "Kelola sekolah & sistem", icon: Shield, demoName: "Admin Sekolah" },
-  { id: "teacher", label: "Guru", desc: "Materi, modul & observasi", icon: BookOpen, demoName: "Ustadz Hasan" },
-  { id: "student", label: "Siswa", desc: "Belajar & self-assessment", icon: User, demoName: "Ahmad Fauzi" },
+const ROLES: { id: Role; label: string; desc: string; icon: typeof Shield }[] = [
+  { id: "admin", label: "Admin", desc: "Kelola sekolah & sistem", icon: Shield },
+  { id: "teacher", label: "Guru", desc: "Materi, modul & observasi", icon: BookOpen },
+  { id: "student", label: "Siswa", desc: "Belajar & self-assessment", icon: User },
 ];
 
 function LoginPage() {
-  const { user, login } = useStore();
+  const { user, login, teachers, students } = useStore();
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>("student");
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
+  const [teacherId, setTeacherId] = useState<string>("");
+  const [studentId, setStudentId] = useState<string>("");
 
   useEffect(() => {
     if (user) navigate({ to: `/${user.role}` });
   }, [user, navigate]);
 
+  useEffect(() => {
+    if (role === "teacher" && !teacherId && teachers[0]) setTeacherId(teachers[0].id);
+    if (role === "student" && !studentId && students[0]) setStudentId(students[0].id);
+  }, [role, teachers, students, teacherId, studentId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const displayName = name.trim() || ROLES.find((r) => r.id === role)!.demoName;
-    if (role === "student" && pin.trim().length < 3) {
-      await swal.fire({ icon: "warning", title: "PIN diperlukan", text: "Masukkan PIN minimal 3 karakter." });
+    if (role === "admin") {
+      login("admin", name.trim() || "Admin Sekolah");
+      successToast("Selamat datang, Admin!");
+      navigate({ to: "/admin" });
       return;
     }
-    login(role, displayName);
-    successToast(`Selamat datang, ${displayName}!`);
-    navigate({ to: `/${role}` });
+    if (role === "teacher") {
+      const t = teachers.find((x) => x.id === teacherId);
+      if (!t) { await swal.fire({ icon: "warning", title: "Pilih guru" }); return; }
+      login("teacher", t.name, t.id);
+      successToast(`Selamat datang, ${t.name}!`);
+      navigate({ to: "/teacher" });
+      return;
+    }
+    const st = students.find((x) => x.id === studentId);
+    if (!st) { await swal.fire({ icon: "warning", title: "Pilih siswa" }); return; }
+    if (pin.trim() !== st.pin) {
+      await swal.fire({ icon: "error", title: "PIN salah", text: `Demo PIN: ${st.pin}` });
+      return;
+    }
+    login("student", st.name, st.id);
+    successToast(`Selamat datang, ${st.name}!`);
+    navigate({ to: "/student" });
   };
 
   return (
@@ -72,9 +93,7 @@ function LoginPage() {
             <div className="font-bold">WhiteBee LMS</div>
           </div>
           <h1 className="text-2xl font-bold">Masuk ke akun Anda</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Pilih peran untuk demo dan mulai eksplorasi.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Pilih peran untuk demo dan mulai eksplorasi.</p>
 
           <div className="mt-6 grid grid-cols-3 gap-2">
             {ROLES.map((r) => {
@@ -86,9 +105,7 @@ function LoginPage() {
                   type="button"
                   onClick={() => setRole(r.id)}
                   className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition ${
-                    active
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:border-primary/50"
+                    active ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -100,34 +117,44 @@ function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div>
-              <Label htmlFor="name">Nama</Label>
-              <Input
-                id="name"
-                placeholder={ROLES.find((r) => r.id === role)!.demoName}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="mt-1.5"
-              />
-            </div>
-            {role === "student" ? (
+            {role === "admin" && (
               <div>
-                <Label htmlFor="pin">PIN Siswa</Label>
-                <Input
-                  id="pin"
-                  placeholder="Masukkan PIN Anda"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  className="mt-1.5"
-                />
-                <p className="text-xs text-muted-foreground mt-1">Demo: gunakan PIN apa saja min. 3 karakter.</p>
+                <Label htmlFor="name">Nama</Label>
+                <Input id="name" placeholder="Admin Sekolah" value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" />
+                <p className="text-xs text-muted-foreground mt-1">Demo: kata sandi tidak diverifikasi.</p>
               </div>
-            ) : (
+            )}
+            {role === "teacher" && (
               <div>
-                <Label htmlFor="pw">Kata Sandi</Label>
-                <Input id="pw" type="password" placeholder="••••••••" className="mt-1.5" />
-                <p className="text-xs text-muted-foreground mt-1">Demo: tidak diverifikasi.</p>
+                <Label>Pilih Guru</Label>
+                <Select value={teacherId} onValueChange={setTeacherId}>
+                  <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih guru" /></SelectTrigger>
+                  <SelectContent>
+                    {teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Kelas yang bisa dikelola diatur Admin.</p>
               </div>
+            )}
+            {role === "student" && (
+              <>
+                <div>
+                  <Label>Pilih Siswa</Label>
+                  <Select value={studentId} onValueChange={setStudentId}>
+                    <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih siswa" /></SelectTrigger>
+                    <SelectContent>
+                      {students.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="pin">PIN Siswa</Label>
+                  <Input id="pin" placeholder="Masukkan PIN" value={pin} onChange={(e) => setPin(e.target.value)} className="mt-1.5" />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Demo PIN: {students.find((s) => s.id === studentId)?.pin ?? "-"}
+                  </p>
+                </div>
+              </>
             )}
             <Button type="submit" className="w-full h-11 text-base font-semibold">
               Masuk sebagai {ROLES.find((r) => r.id === role)!.label}

@@ -32,22 +32,26 @@ function ObservationPage() {
   const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`);
   const [entries, setEntries] = useState<Record<string, { value: ObservationValue; note: string }>>({});
 
-  // Match logged-in user by name (mock)
   const student = useMemo(
-    () => students.find((s) => s.name.toLowerCase() === (user?.name ?? "").toLowerCase()) ?? students[0],
+    () => students.find((s) => s.id === user?.studentId) ?? students[0],
     [students, user]
+  );
+
+  const classIndicators = useMemo(
+    () => indicators.filter((i) => i.classId === student?.classId),
+    [indicators, student]
   );
 
   useEffect(() => {
     if (!student) return;
     const rec = observations.find((o) => o.studentId === student.id && o.month === month);
     const next: typeof entries = {};
-    indicators.forEach((i) => {
+    classIndicators.forEach((i) => {
       const e = rec?.entries.find((x) => x.indicatorId === i.id);
       next[i.id] = { value: e?.value ?? "BB", note: e?.note ?? "" };
     });
     setEntries(next);
-  }, [student, month, observations, indicators]);
+  }, [student, month, observations, classIndicators]);
 
   const setValue = (id: string, value: ObservationValue) =>
     setEntries((p) => ({ ...p, [id]: { ...p[id], value } }));
@@ -59,7 +63,7 @@ function ObservationPage() {
     saveObservation({
       studentId: student.id,
       month,
-      entries: indicators.map((i) => ({
+      entries: classIndicators.map((i) => ({
         indicatorId: i.id,
         value: entries[i.id]?.value ?? "BB",
         note: entries[i.id]?.note ?? "",
@@ -96,7 +100,7 @@ function ObservationPage() {
 
       <div className="space-y-4">
         {groups.map(({ cat, icon: Icon, tone }) => {
-          const list = indicators.filter((i) => i.category === cat);
+          const list = classIndicators.filter((i) => i.category === cat);
           return (
             <Card key={cat}>
               <CardContent className="p-0">
@@ -125,18 +129,16 @@ function ObservationPage() {
                           {(() => {
                             const val = entries[i.id]?.value ?? "BB";
                             return (
-                              <>
-                                <td colSpan={4} className="p-3">
-                                  <RadioGroup value={val} onValueChange={(v) => setValue(i.id, v as ObservationValue)} className="flex justify-around">
-                                    {VALUES.map((v) => (
-                                      <div key={v.v} className="flex flex-col items-center gap-1">
-                                        <RadioGroupItem id={`${i.id}-${v.v}`} value={v.v} />
-                                        <Label htmlFor={`${i.id}-${v.v}`} className="text-[10px] text-muted-foreground">{v.v}</Label>
-                                      </div>
-                                    ))}
-                                  </RadioGroup>
-                                </td>
-                              </>
+                              <td colSpan={4} className="p-3">
+                                <RadioGroup value={val} onValueChange={(v) => setValue(i.id, v as ObservationValue)} className="flex justify-around">
+                                  {VALUES.map((v) => (
+                                    <div key={v.v} className="flex flex-col items-center gap-1">
+                                      <RadioGroupItem id={`${i.id}-${v.v}`} value={v.v} />
+                                      <Label htmlFor={`${i.id}-${v.v}`} className="text-[10px] text-muted-foreground">{v.v}</Label>
+                                    </div>
+                                  ))}
+                                </RadioGroup>
+                              </td>
                             );
                           })()}
                           <td className="p-3 align-top">
@@ -145,7 +147,7 @@ function ObservationPage() {
                         </tr>
                       ))}
                       {list.length === 0 && (
-                        <tr><td colSpan={6} className="p-6 text-center text-muted-foreground italic">Belum ada indikator.</td></tr>
+                        <tr><td colSpan={6} className="p-6 text-center text-muted-foreground italic">Belum ada indikator untuk kelasmu.</td></tr>
                       )}
                     </tbody>
                   </table>

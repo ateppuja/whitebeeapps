@@ -7,13 +7,15 @@ import { FolderOpen, FileText, Download } from "lucide-react";
 export const Route = createFileRoute("/student/modules")({ component: ModulesPage });
 
 function ModulesPage() {
-  const { subjects, modules } = useStore();
+  const { subjects, modules, students, user } = useStore();
+  const me = students.find((s) => s.id === user?.studentId);
+  const classModules = modules.filter((m) => m.classId === me?.classId);
   return (
     <div>
       <PageHeader title="Kumpulan Modul" description="Unduh atau lihat modul per kategori." />
       <div className="space-y-4">
         {subjects.map((s) => {
-          const list = modules.filter((m) => m.subjectId === s.id);
+          const list = classModules.filter((m) => m.subjectId === s.id);
           return (
             <Card key={s.id}>
               <CardContent className="p-5">

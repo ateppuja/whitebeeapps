@@ -7,13 +7,13 @@ import { Heart, Sparkles } from "lucide-react";
 export const Route = createFileRoute("/admin/indicator-categories")({ component: Page });
 
 function Page() {
-  const { indicators } = useStore();
+  const { indicators, classes } = useStore();
   const adab = indicators.filter((i) => i.category === "Adab");
   const tarbiyah = indicators.filter((i) => i.category === "Tarbiyah");
 
   return (
     <div>
-      <PageHeader title="Kategori Observasi" description="Sistem menggunakan dua kategori utama: Adab dan Tarbiyah." />
+      <PageHeader title="Kategori Observasi" description="Sistem menggunakan dua kategori utama: Adab dan Tarbiyah. Indikator dikelola guru per kelas." />
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center gap-3">
@@ -22,7 +22,7 @@ function Page() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{adab.length}</div>
-            <div className="text-sm text-muted-foreground">indikator terdaftar</div>
+            <div className="text-sm text-muted-foreground">indikator dari {classes.length} kelas</div>
           </CardContent>
         </Card>
         <Card>
@@ -32,11 +32,11 @@ function Page() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{tarbiyah.length}</div>
-            <div className="text-sm text-muted-foreground">indikator terdaftar</div>
+            <div className="text-sm text-muted-foreground">indikator dari {classes.length} kelas</div>
           </CardContent>
         </Card>
       </div>
-      <p className="text-xs text-muted-foreground mt-4">Guru dapat menambah indikator pada masing-masing kategori dari menu Guru → Indikator Observasi.</p>
+      <p className="text-xs text-muted-foreground mt-4">Setiap kelas memiliki indikator sendiri yang dikelola guru pada menu Guru → Indikator Observasi.</p>
     </div>
   );
 }
