@@ -224,19 +224,29 @@ function ReportsPage() {
             </Button>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            {classStudents.map((s) => (
-              <label key={s.id} className="flex items-center gap-2 rounded-lg border p-3 cursor-pointer hover:bg-accent/50">
-                <Checkbox checked={selectedStudents.has(s.id)} onCheckedChange={() => toggleStudent(s.id)} />
-                <span className="text-sm flex-1">{s.name}</span>
-                <span className={`text-[11px] font-semibold ${filled.has(s.id) ? "text-primary" : "text-muted-foreground"}`}>
-                  {filled.has(s.id) ? "Terisi" : "Kosong"}
-                </span>
-              </label>
-            ))}
+            {classStudents.map((s) => {
+              const prog = studentProgress.get(s.id) ?? { done: 0, total: months.length || 1, pct: 0 };
+              return (
+                <label key={s.id} className="flex items-center gap-3 rounded-xl border p-3 cursor-pointer hover:bg-accent/40 transition">
+                  <Checkbox checked={selectedStudents.has(s.id)} onCheckedChange={() => toggleStudent(s.id)} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium truncate">{s.name}</span>
+                      <span className={`text-xs font-bold ${prog.pct === 100 ? "text-primary" : prog.pct > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
+                        {prog.pct}%
+                      </span>
+                    </div>
+                    <Progress value={prog.pct} className="h-1.5 mt-1.5" />
+                    <div className="text-[10px] text-muted-foreground mt-1">{prog.done}/{prog.total} bulan terisi</div>
+                  </div>
+                </label>
+              );
+            })}
             {classStudents.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-6 sm:col-span-2">Belum ada siswa di kelas ini.</p>
             )}
           </div>
+
           <div className="mt-4 flex flex-wrap gap-2 justify-end">
             <Button variant="outline" onClick={() => exportDoc("Adab")}><Download className="h-4 w-4 mr-1" /> Export Adab (DOC)</Button>
             <Button onClick={() => exportDoc("Tarbiyah")}><FileText className="h-4 w-4 mr-1" /> Export Tarbiyah (DOC)</Button>
