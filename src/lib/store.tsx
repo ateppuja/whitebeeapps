@@ -142,13 +142,14 @@ const initialState: StoreState = {
     { id: "st3", name: "Bilal Rahman", pin: "3456", classId: C2 },
   ],
   indicators: [
-    { id: uid(), classId: C1, category: "Adab", text: "Mengucap salam saat bertemu guru" },
-    { id: uid(), classId: C1, category: "Adab", text: "Berbicara dengan sopan" },
+    { id: uid(), classId: C1, category: "Adab", title: "Adab kepada Guru", text: "Mengucap salam saat bertemu guru" },
+    { id: uid(), classId: C1, category: "Adab", title: "Adab Berbicara", text: "Berbicara dengan sopan" },
     { id: uid(), classId: C1, category: "Tarbiyah", text: "Shalat lima waktu tepat waktu" },
     { id: uid(), classId: C1, category: "Tarbiyah", text: "Membaca Al-Qur'an setiap hari" },
-    { id: uid(), classId: C2, category: "Adab", text: "Menghormati orang tua" },
+    { id: uid(), classId: C2, category: "Adab", title: "Adab kepada Orang Tua", text: "Menghormati orang tua" },
     { id: uid(), classId: C2, category: "Tarbiyah", text: "Menghafal surah pendek" },
   ],
+  adabTitles: ["Adab kepada Guru", "Adab kepada Orang Tua", "Adab Berbicara", "Adab Belajar", "Adab Makan & Minum"],
   observations: [],
   announcements: {
     [C1]: "Assalamu'alaikum Kelas 4A. Jangan lupa isi Matriks Observasi bulan ini.",
