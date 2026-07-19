@@ -14,6 +14,7 @@ import { Route as StudentRouteImport } from './routes/student'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
+import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TeacherStudentsRouteImport } from './routes/teacher.students'
 import { Route as TeacherScheduleRouteImport } from './routes/teacher.schedule'
@@ -21,6 +22,11 @@ import { Route as TeacherReportsRouteImport } from './routes/teacher.reports'
 import { Route as TeacherModulesRouteImport } from './routes/teacher.modules'
 import { Route as TeacherIndicatorsRouteImport } from './routes/teacher.indicators'
 import { Route as TeacherAnnouncementsRouteImport } from './routes/teacher.announcements'
+import { Route as StudentTodayRouteImport } from './routes/student.today'
+import { Route as StudentScheduleRouteImport } from './routes/student.schedule'
+import { Route as StudentObservationRouteImport } from './routes/student.observation'
+import { Route as StudentModulesRouteImport } from './routes/student.modules'
+import { Route as StudentMaterialsRouteImport } from './routes/student.materials'
 import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
 import { Route as AdminIndicatorCategoriesRouteImport } from './routes/admin.indicator-categories'
 import { Route as AdminClassesRouteImport } from './routes/admin.classes'
@@ -49,6 +55,11 @@ const TeacherIndexRoute = TeacherIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => TeacherRoute,
+} as any)
+const StudentIndexRoute = StudentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -85,6 +96,31 @@ const TeacherAnnouncementsRoute = TeacherAnnouncementsRouteImport.update({
   path: '/announcements',
   getParentRoute: () => TeacherRoute,
 } as any)
+const StudentTodayRoute = StudentTodayRouteImport.update({
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentScheduleRoute = StudentScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentObservationRoute = StudentObservationRouteImport.update({
+  id: '/observation',
+  path: '/observation',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentModulesRoute = StudentModulesRouteImport.update({
+  id: '/modules',
+  path: '/modules',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentMaterialsRoute = StudentMaterialsRouteImport.update({
+  id: '/materials',
+  path: '/materials',
+  getParentRoute: () => StudentRoute,
+} as any)
 const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
   id: '/subjects',
   path: '/subjects',
@@ -105,11 +141,16 @@ const AdminClassesRoute = AdminClassesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
-  '/student': typeof StudentRoute
+  '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
   '/admin/classes': typeof AdminClassesRoute
   '/admin/indicator-categories': typeof AdminIndicatorCategoriesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/student/materials': typeof StudentMaterialsRoute
+  '/student/modules': typeof StudentModulesRoute
+  '/student/observation': typeof StudentObservationRoute
+  '/student/schedule': typeof StudentScheduleRoute
+  '/student/today': typeof StudentTodayRoute
   '/teacher/announcements': typeof TeacherAnnouncementsRoute
   '/teacher/indicators': typeof TeacherIndicatorsRoute
   '/teacher/modules': typeof TeacherModulesRoute
@@ -117,14 +158,19 @@ export interface FileRoutesByFullPath {
   '/teacher/schedule': typeof TeacherScheduleRoute
   '/teacher/students': typeof TeacherStudentsRoute
   '/admin/': typeof AdminIndexRoute
+  '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/student': typeof StudentRoute
   '/admin/classes': typeof AdminClassesRoute
   '/admin/indicator-categories': typeof AdminIndicatorCategoriesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/student/materials': typeof StudentMaterialsRoute
+  '/student/modules': typeof StudentModulesRoute
+  '/student/observation': typeof StudentObservationRoute
+  '/student/schedule': typeof StudentScheduleRoute
+  '/student/today': typeof StudentTodayRoute
   '/teacher/announcements': typeof TeacherAnnouncementsRoute
   '/teacher/indicators': typeof TeacherIndicatorsRoute
   '/teacher/modules': typeof TeacherModulesRoute
@@ -132,17 +178,23 @@ export interface FileRoutesByTo {
   '/teacher/schedule': typeof TeacherScheduleRoute
   '/teacher/students': typeof TeacherStudentsRoute
   '/admin': typeof AdminIndexRoute
+  '/student': typeof StudentIndexRoute
   '/teacher': typeof TeacherIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
-  '/student': typeof StudentRoute
+  '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
   '/admin/classes': typeof AdminClassesRoute
   '/admin/indicator-categories': typeof AdminIndicatorCategoriesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/student/materials': typeof StudentMaterialsRoute
+  '/student/modules': typeof StudentModulesRoute
+  '/student/observation': typeof StudentObservationRoute
+  '/student/schedule': typeof StudentScheduleRoute
+  '/student/today': typeof StudentTodayRoute
   '/teacher/announcements': typeof TeacherAnnouncementsRoute
   '/teacher/indicators': typeof TeacherIndicatorsRoute
   '/teacher/modules': typeof TeacherModulesRoute
@@ -150,6 +202,7 @@ export interface FileRoutesById {
   '/teacher/schedule': typeof TeacherScheduleRoute
   '/teacher/students': typeof TeacherStudentsRoute
   '/admin/': typeof AdminIndexRoute
+  '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
 }
 export interface FileRouteTypes {
@@ -162,6 +215,11 @@ export interface FileRouteTypes {
     | '/admin/classes'
     | '/admin/indicator-categories'
     | '/admin/subjects'
+    | '/student/materials'
+    | '/student/modules'
+    | '/student/observation'
+    | '/student/schedule'
+    | '/student/today'
     | '/teacher/announcements'
     | '/teacher/indicators'
     | '/teacher/modules'
@@ -169,14 +227,19 @@ export interface FileRouteTypes {
     | '/teacher/schedule'
     | '/teacher/students'
     | '/admin/'
+    | '/student/'
     | '/teacher/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/student'
     | '/admin/classes'
     | '/admin/indicator-categories'
     | '/admin/subjects'
+    | '/student/materials'
+    | '/student/modules'
+    | '/student/observation'
+    | '/student/schedule'
+    | '/student/today'
     | '/teacher/announcements'
     | '/teacher/indicators'
     | '/teacher/modules'
@@ -184,6 +247,7 @@ export interface FileRouteTypes {
     | '/teacher/schedule'
     | '/teacher/students'
     | '/admin'
+    | '/student'
     | '/teacher'
   id:
     | '__root__'
@@ -194,6 +258,11 @@ export interface FileRouteTypes {
     | '/admin/classes'
     | '/admin/indicator-categories'
     | '/admin/subjects'
+    | '/student/materials'
+    | '/student/modules'
+    | '/student/observation'
+    | '/student/schedule'
+    | '/student/today'
     | '/teacher/announcements'
     | '/teacher/indicators'
     | '/teacher/modules'
@@ -201,13 +270,14 @@ export interface FileRouteTypes {
     | '/teacher/schedule'
     | '/teacher/students'
     | '/admin/'
+    | '/student/'
     | '/teacher/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
-  StudentRoute: typeof StudentRoute
+  StudentRoute: typeof StudentRouteWithChildren
   TeacherRoute: typeof TeacherRouteWithChildren
 }
 
@@ -247,6 +317,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/teacher/'
       preLoaderRoute: typeof TeacherIndexRouteImport
       parentRoute: typeof TeacherRoute
+    }
+    '/student/': {
+      id: '/student/'
+      path: '/'
+      fullPath: '/student/'
+      preLoaderRoute: typeof StudentIndexRouteImport
+      parentRoute: typeof StudentRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -297,6 +374,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherAnnouncementsRouteImport
       parentRoute: typeof TeacherRoute
     }
+    '/student/today': {
+      id: '/student/today'
+      path: '/today'
+      fullPath: '/student/today'
+      preLoaderRoute: typeof StudentTodayRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/schedule': {
+      id: '/student/schedule'
+      path: '/schedule'
+      fullPath: '/student/schedule'
+      preLoaderRoute: typeof StudentScheduleRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/observation': {
+      id: '/student/observation'
+      path: '/observation'
+      fullPath: '/student/observation'
+      preLoaderRoute: typeof StudentObservationRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/modules': {
+      id: '/student/modules'
+      path: '/modules'
+      fullPath: '/student/modules'
+      preLoaderRoute: typeof StudentModulesRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/materials': {
+      id: '/student/materials'
+      path: '/materials'
+      fullPath: '/student/materials'
+      preLoaderRoute: typeof StudentMaterialsRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/admin/subjects': {
       id: '/admin/subjects'
       path: '/subjects'
@@ -337,6 +449,27 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface StudentRouteChildren {
+  StudentMaterialsRoute: typeof StudentMaterialsRoute
+  StudentModulesRoute: typeof StudentModulesRoute
+  StudentObservationRoute: typeof StudentObservationRoute
+  StudentScheduleRoute: typeof StudentScheduleRoute
+  StudentTodayRoute: typeof StudentTodayRoute
+  StudentIndexRoute: typeof StudentIndexRoute
+}
+
+const StudentRouteChildren: StudentRouteChildren = {
+  StudentMaterialsRoute: StudentMaterialsRoute,
+  StudentModulesRoute: StudentModulesRoute,
+  StudentObservationRoute: StudentObservationRoute,
+  StudentScheduleRoute: StudentScheduleRoute,
+  StudentTodayRoute: StudentTodayRoute,
+  StudentIndexRoute: StudentIndexRoute,
+}
+
+const StudentRouteWithChildren =
+  StudentRoute._addFileChildren(StudentRouteChildren)
+
 interface TeacherRouteChildren {
   TeacherAnnouncementsRoute: typeof TeacherAnnouncementsRoute
   TeacherIndicatorsRoute: typeof TeacherIndicatorsRoute
@@ -363,7 +496,7 @@ const TeacherRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
-  StudentRoute: StudentRoute,
+  StudentRoute: StudentRouteWithChildren,
   TeacherRoute: TeacherRouteWithChildren,
 }
 export const routeTree = rootRouteImport
