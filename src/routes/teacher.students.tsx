@@ -114,17 +114,18 @@ function StudentsPage() {
               Kelas: <span className="font-semibold text-primary">{className}</span>
             </div>
             <div><Label>Nama</Label><Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" /></div>
+            <div><Label>Kode Siswa</Label><Input value={pin} onChange={(e) => setPin(e.target.value)} className="mt-1.5 font-mono" placeholder="Contoh: 1234" /></div>
             <div>
               <Label>Status Kelas</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as StudentStatus)}>
                 <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Reguler">Reguler</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
+                  <SelectItem value="Reguler">Reguler — akses penuh di kelas</SelectItem>
+                  <SelectItem value="Online">Online — akses pembelajaran daring</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">Menentukan hak akses siswa.</p>
             </div>
-            <div><Label>Kode Siswa</Label><Input value={pin} onChange={(e) => setPin(e.target.value)} className="mt-1.5 font-mono" placeholder="Contoh: 1234" /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Batal</Button>
