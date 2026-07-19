@@ -166,13 +166,27 @@ function MaterialsPage() {
             </div>
             <div>
               <Label>Kategori Mapel</Label>
-              <Select value={subjectId} onValueChange={handleSubjectChange}>
-                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
-                <SelectContent>
-                  {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  <SelectItem value={ADD_NEW}>+ Tambah Kategori Baru</SelectItem>
-                </SelectContent>
-              </Select>
+              {newCatMode ? (
+                <div className="mt-1.5 flex gap-2">
+                  <Input
+                    autoFocus
+                    placeholder="Nama kategori baru"
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addNewCategory())}
+                  />
+                  <Button type="button" onClick={addNewCategory}>Tambah</Button>
+                  <Button type="button" variant="outline" onClick={() => setNewCatMode(false)}>Batal</Button>
+                </div>
+              ) : (
+                <Select value={subjectId} onValueChange={handleSubjectChange}>
+                  <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    <SelectItem value={ADD_NEW}>+ Tambah Kategori Baru</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div><Label>Judul</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1.5" /></div>
             <div><Label>Tanggal Publish</Label><Input type="date" value={publishDate} onChange={(e) => setPublishDate(e.target.value)} className="mt-1.5" /></div>
