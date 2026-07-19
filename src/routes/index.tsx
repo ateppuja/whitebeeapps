@@ -189,10 +189,12 @@ function LoginPage() {
               <>
                 <div>
                   <Label>Pilih Kelas</Label>
-                  <Select value={classId} onValueChange={setClassId}>
+                  <Select value={studentSlot} onValueChange={setStudentSlot}>
                     <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih kelas" /></SelectTrigger>
                     <SelectContent>
-                      {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {studentSlots.map((s) => (
+                        <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">{studentHint}</p>
