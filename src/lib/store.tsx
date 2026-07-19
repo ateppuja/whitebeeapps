@@ -67,6 +67,7 @@ export interface Indicator {
   classId: string;
   category: IndicatorCategory;
   text: string;
+  title?: string; // Adab: judul (heading), text = sub judul
 }
 
 export type ObservationValue = "BB" | "MB" | "BSH" | "BSB";
