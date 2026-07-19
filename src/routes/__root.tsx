@@ -79,21 +79,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "WhiteBee LMS — Adab & Tarbiyah" },
+      { title: "WhiteBee Apps" },
       { name: "description", content: "Sistem Manajemen Pembelajaran dengan Matriks Observasi Adab & Tarbiyah." },
       { name: "author", content: "WhiteBee" },
-      { property: "og:title", content: "WhiteBee LMS — Adab & Tarbiyah" },
-      { property: "og:description", content: "LMS modern untuk pembelajaran dan observasi karakter siswa." },
+      { property: "og:title", content: "WhiteBee Apps" },
+      { property: "og:description", content: "Sistem Manajemen Pembelajaran dengan Matriks Observasi Adab & Tarbiyah." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
 
+      { name: "twitter:title", content: "WhiteBee Apps" },
+      { name: "twitter:description", content: "Sistem Manajemen Pembelajaran dengan Matriks Observasi Adab & Tarbiyah." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/637c396d-c3a1-46fb-85e7-b1462bb3a6c3/id-preview-dafe3d0d--30798963-a2fa-4ace-9eb0-6cbeb81598f2.lovable.app-1784466261605.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/637c396d-c3a1-46fb-85e7-b1462bb3a6c3/id-preview-dafe3d0d--30798963-a2fa-4ace-9eb0-6cbeb81598f2.lovable.app-1784466261605.png" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
   shellComponent: RootShell,
