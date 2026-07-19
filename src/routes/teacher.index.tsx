@@ -61,19 +61,25 @@ function MaterialsPage() {
     setOpen(true);
   };
 
-  const handleSubjectChange = async (v: string) => {
+  const [newCatMode, setNewCatMode] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+
+  const handleSubjectChange = (v: string) => {
     if (v === ADD_NEW) {
-      const r = await swal.fire({
-        title: "Kategori Baru", input: "text", inputPlaceholder: "Nama kategori",
-        showCancelButton: true, confirmButtonText: "Tambah", cancelButtonText: "Batal",
-      });
-      if (r.isConfirmed && r.value?.trim()) {
-        const newId = uid();
-        set("subjects", [...subjects, { id: newId, name: r.value.trim() }]);
-        setSubjectId(newId);
-        successToast("Kategori ditambahkan");
-      }
+      setNewCatMode(true);
+      setNewCatName("");
     } else setSubjectId(v);
+  };
+
+  const addNewCategory = () => {
+    const name = newCatName.trim();
+    if (!name) return;
+    const newId = uid();
+    set("subjects", [...subjects, { id: newId, name }]);
+    setSubjectId(newId);
+    setNewCatMode(false);
+    setNewCatName("");
+    successToast("Kategori ditambahkan");
   };
 
   const save = () => {
