@@ -55,11 +55,14 @@ export interface ScheduleItem {
   subject: string;
 }
 
+export type StudentStatus = "Reguler" | "Online";
+
 export interface Student {
   id: string;
   name: string;
   pin: string;
   classId: string;
+  status: StudentStatus;
 }
 
 export type IndicatorCategory = "Adab" | "Tarbiyah";
