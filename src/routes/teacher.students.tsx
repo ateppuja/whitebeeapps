@@ -24,6 +24,7 @@ function StudentsPage() {
   const [editing, setEditing] = useState<Student | null>(null);
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
+  const [status, setStatus] = useState<StudentStatus>("Reguler");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
 
@@ -39,11 +40,11 @@ function StudentsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const openNew = () => { setEditing(null); setName(""); setPin(""); setOpen(true); };
-  const openEdit = (s: Student) => { setEditing(s); setName(s.name); setPin(s.pin); setOpen(true); };
+  const openNew = () => { setEditing(null); setName(""); setPin(""); setStatus("Reguler"); setOpen(true); };
+  const openEdit = (s: Student) => { setEditing(s); setName(s.name); setPin(s.pin); setStatus(s.status ?? "Reguler"); setOpen(true); };
   const save = () => {
     if (!name.trim() || !pin.trim() || !activeClassId) return;
-    const data: Student = { id: editing?.id ?? uid(), name, pin, classId: activeClassId };
+    const data: Student = { id: editing?.id ?? uid(), name, pin, classId: activeClassId, status };
     if (editing) set("students", students.map((x) => x.id === editing.id ? data : x));
     else set("students", [...students, data]);
     successToast("Tersimpan");
