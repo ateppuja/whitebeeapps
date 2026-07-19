@@ -27,6 +27,7 @@ import { Route as StudentScheduleRouteImport } from './routes/student.schedule'
 import { Route as StudentObservationRouteImport } from './routes/student.observation'
 import { Route as StudentModulesRouteImport } from './routes/student.modules'
 import { Route as StudentMaterialsRouteImport } from './routes/student.materials'
+import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AdminSubjectsRouteImport } from './routes/admin.subjects'
 import { Route as AdminIndicatorCategoriesRouteImport } from './routes/admin.indicator-categories'
 import { Route as AdminClassesRouteImport } from './routes/admin.classes'
@@ -121,6 +122,11 @@ const StudentMaterialsRoute = StudentMaterialsRouteImport.update({
   path: '/materials',
   getParentRoute: () => StudentRoute,
 } as any)
+const AdminTeachersRoute = AdminTeachersRouteImport.update({
+  id: '/teachers',
+  path: '/teachers',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
   id: '/subjects',
   path: '/subjects',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/admin/classes': typeof AdminClassesRoute
   '/admin/indicator-categories': typeof AdminIndicatorCategoriesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/teachers': typeof AdminTeachersRoute
   '/student/materials': typeof StudentMaterialsRoute
   '/student/modules': typeof StudentModulesRoute
   '/student/observation': typeof StudentObservationRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/admin/classes': typeof AdminClassesRoute
   '/admin/indicator-categories': typeof AdminIndicatorCategoriesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/teachers': typeof AdminTeachersRoute
   '/student/materials': typeof StudentMaterialsRoute
   '/student/modules': typeof StudentModulesRoute
   '/student/observation': typeof StudentObservationRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/admin/classes': typeof AdminClassesRoute
   '/admin/indicator-categories': typeof AdminIndicatorCategoriesRoute
   '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/teachers': typeof AdminTeachersRoute
   '/student/materials': typeof StudentMaterialsRoute
   '/student/modules': typeof StudentModulesRoute
   '/student/observation': typeof StudentObservationRoute
@@ -215,6 +224,7 @@ export interface FileRouteTypes {
     | '/admin/classes'
     | '/admin/indicator-categories'
     | '/admin/subjects'
+    | '/admin/teachers'
     | '/student/materials'
     | '/student/modules'
     | '/student/observation'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/admin/classes'
     | '/admin/indicator-categories'
     | '/admin/subjects'
+    | '/admin/teachers'
     | '/student/materials'
     | '/student/modules'
     | '/student/observation'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/admin/classes'
     | '/admin/indicator-categories'
     | '/admin/subjects'
+    | '/admin/teachers'
     | '/student/materials'
     | '/student/modules'
     | '/student/observation'
@@ -409,6 +421,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentMaterialsRouteImport
       parentRoute: typeof StudentRoute
     }
+    '/admin/teachers': {
+      id: '/admin/teachers'
+      path: '/teachers'
+      fullPath: '/admin/teachers'
+      preLoaderRoute: typeof AdminTeachersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/subjects': {
       id: '/admin/subjects'
       path: '/subjects'
@@ -437,6 +456,7 @@ interface AdminRouteChildren {
   AdminClassesRoute: typeof AdminClassesRoute
   AdminIndicatorCategoriesRoute: typeof AdminIndicatorCategoriesRoute
   AdminSubjectsRoute: typeof AdminSubjectsRoute
+  AdminTeachersRoute: typeof AdminTeachersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -444,6 +464,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminClassesRoute: AdminClassesRoute,
   AdminIndicatorCategoriesRoute: AdminIndicatorCategoriesRoute,
   AdminSubjectsRoute: AdminSubjectsRoute,
+  AdminTeachersRoute: AdminTeachersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

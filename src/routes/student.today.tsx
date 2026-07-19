@@ -7,9 +7,10 @@ import { Video, FileText, ClipboardList, CalendarDays } from "lucide-react";
 export const Route = createFileRoute("/student/today")({ component: TodayPage });
 
 function TodayPage() {
-  const { materials, subjects } = useStore();
+  const { materials, subjects, students, user } = useStore();
+  const me = students.find((s) => s.id === user?.studentId);
   const today = new Date().toISOString().slice(0, 10);
-  const list = materials.filter((m) => m.publishDate === today);
+  const list = materials.filter((m) => m.publishDate === today && m.classId === me?.classId);
   const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? "-";
 
   return (

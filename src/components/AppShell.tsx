@@ -18,8 +18,10 @@ import {
   School,
   LogOut,
   GraduationCap,
+  UserCog,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface NavItem {
   to: string;
@@ -31,6 +33,7 @@ const NAV: Record<Role, NavItem[]> = {
   admin: [
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { to: "/admin/classes", label: "Kelola Kelas", icon: School },
+    { to: "/admin/teachers", label: "Guru & Penugasan", icon: UserCog },
     { to: "/admin/subjects", label: "Kategori Mapel", icon: BookOpen },
     { to: "/admin/indicator-categories", label: "Kategori Observasi", icon: ListChecks },
   ],
@@ -60,7 +63,7 @@ const ROLE_LABEL: Record<Role, string> = {
 };
 
 export function AppShell({ role, children }: { role: Role; children: ReactNode }) {
-  const { user, logout } = useStore();
+  const { user, logout, teacherClasses, activeClassId, setActiveClassId } = useStore();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -79,6 +82,8 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
       navigate({ to: "/" });
     }
   };
+
+  const showClassPicker = role === "teacher" && teacherClasses.length > 0;
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -131,6 +136,26 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
+        {showClassPicker && (
+          <header className="hidden md:flex items-center justify-between gap-3 px-6 py-3 border-b bg-card">
+            <div className="flex items-center gap-3">
+              <School className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Kelas Aktif</span>
+              <Select value={activeClassId ?? undefined} onValueChange={setActiveClassId}>
+                <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Pilih kelas" /></SelectTrigger>
+                <SelectContent>
+                  {teacherClasses.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name} <span className="text-muted-foreground">· Grade {c.grade}</span></SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {teacherClasses.length} kelas ditugaskan
+            </div>
+          </header>
+        )}
+
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card">
           <div className="flex items-center gap-2">
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground">
@@ -138,13 +163,23 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
             </div>
             <div className="text-sm font-bold">WhiteBee LMS</div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-muted-foreground"
-          >
+          <button onClick={handleLogout} className="text-sm text-muted-foreground">
             <LogOut className="h-4 w-4" />
           </button>
         </header>
+
+        {showClassPicker && (
+          <div className="md:hidden px-4 py-2 border-b bg-card">
+            <Select value={activeClassId ?? undefined} onValueChange={setActiveClassId}>
+              <SelectTrigger className="w-full h-9"><SelectValue placeholder="Pilih kelas" /></SelectTrigger>
+              <SelectContent>
+                {teacherClasses.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <nav className="md:hidden overflow-x-auto border-b bg-card px-3 py-2">
           <div className="flex gap-1 w-max">

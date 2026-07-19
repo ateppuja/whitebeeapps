@@ -9,13 +9,16 @@ const DAYS: ScheduleItem["day"][] = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"
 export const Route = createFileRoute("/student/schedule")({ component: SchedulePage });
 
 function SchedulePage() {
-  const { schedule } = useStore();
+  const { schedule, students, user, classes } = useStore();
+  const me = students.find((s) => s.id === user?.studentId);
+  const myClass = classes.find((c) => c.id === me?.classId);
+  const classSchedule = schedule.filter((s) => s.classId === me?.classId);
   return (
     <div>
-      <PageHeader title="Jadwal Pelajaran" description="Jadwal mingguan kelasmu." />
+      <PageHeader title="Jadwal Pelajaran" description={`Jadwal mingguan ${myClass?.name ?? ""}.`} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {DAYS.map((d) => {
-          const list = schedule.filter((s) => s.day === d);
+          const list = classSchedule.filter((s) => s.day === d);
           return (
             <Card key={d}>
               <CardContent className="p-5">

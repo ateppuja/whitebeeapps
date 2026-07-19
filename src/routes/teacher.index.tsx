@@ -12,13 +12,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useStore, type Material } from "@/lib/store";
 import { confirmDelete, successToast, swal } from "@/lib/swal";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { NoClassSelected } from "@/components/NoClassSelected";
 
 export const Route = createFileRoute("/teacher/")({ component: MaterialsPage });
 
 const ADD_NEW = "__add_new__";
 
 function MaterialsPage() {
-  const { materials, subjects, set, uid } = useStore();
+  const { materials, subjects, set, uid, activeClassId, classes } = useStore();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Material | null>(null);
   const [subjectId, setSubjectId] = useState("");
@@ -30,15 +31,21 @@ function MaterialsPage() {
   const [q, setQ] = useState("");
   const [filterSubject, setFilterSubject] = useState<string>("all");
 
+  const classMaterials = useMemo(
+    () => materials.filter((m) => m.classId === activeClassId),
+    [materials, activeClassId]
+  );
   const filtered = useMemo(
     () =>
-      materials.filter((m) => {
+      classMaterials.filter((m) => {
         if (filterSubject !== "all" && m.subjectId !== filterSubject) return false;
         if (q && !m.title.toLowerCase().includes(q.toLowerCase())) return false;
         return true;
       }),
-    [materials, filterSubject, q],
+    [classMaterials, filterSubject, q]
   );
+
+  const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
 
   const openNew = () => {
     setEditing(null);
@@ -47,7 +54,6 @@ function MaterialsPage() {
     setVideoLink(""); setFileLink(""); setInstructions("");
     setOpen(true);
   };
-
   const openEdit = (m: Material) => {
     setEditing(m); setSubjectId(m.subjectId); setTitle(m.title);
     setPublishDate(m.publishDate); setVideoLink(m.videoLink ?? "");
@@ -58,12 +64,8 @@ function MaterialsPage() {
   const handleSubjectChange = async (v: string) => {
     if (v === ADD_NEW) {
       const r = await swal.fire({
-        title: "Kategori Baru",
-        input: "text",
-        inputPlaceholder: "Nama kategori",
-        showCancelButton: true,
-        confirmButtonText: "Tambah",
-        cancelButtonText: "Batal",
+        title: "Kategori Baru", input: "text", inputPlaceholder: "Nama kategori",
+        showCancelButton: true, confirmButtonText: "Tambah", cancelButtonText: "Batal",
       });
       if (r.isConfirmed && r.value?.trim()) {
         const newId = uid();
@@ -75,8 +77,8 @@ function MaterialsPage() {
   };
 
   const save = () => {
-    if (!title.trim() || !subjectId) return;
-    const data: Material = { id: editing?.id ?? uid(), subjectId, title, publishDate, videoLink, fileLink, instructions };
+    if (!title.trim() || !subjectId || !activeClassId) return;
+    const data: Material = { id: editing?.id ?? uid(), classId: activeClassId, subjectId, title, publishDate, videoLink, fileLink, instructions };
     if (editing) set("materials", materials.map((m) => m.id === editing.id ? data : m));
     else set("materials", [...materials, data]);
     successToast(editing ? "Materi diperbarui" : "Materi ditambahkan");
@@ -92,10 +94,15 @@ function MaterialsPage() {
 
   const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? "-";
 
+  if (!activeClassId) return <NoClassSelected />;
+
   return (
     <div>
-      <PageHeader title="Kelola Materi" description="Publikasikan materi pembelajaran untuk siswa."
-        actions={<Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Materi Baru</Button>} />
+      <PageHeader
+        title="Kelola Materi"
+        description={`Publikasikan materi untuk ${className}.`}
+        actions={<Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Materi Baru</Button>}
+      />
 
       <Card className="mb-4">
         <CardContent className="p-4 grid gap-3 sm:grid-cols-[1fr_220px]">
@@ -148,6 +155,9 @@ function MaterialsPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editing ? "Edit Materi" : "Materi Baru"}</DialogTitle></DialogHeader>
           <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+            <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-xs">
+              Kelas: <span className="font-semibold text-primary">{className}</span>
+            </div>
             <div>
               <Label>Kategori Mapel</Label>
               <Select value={subjectId} onValueChange={handleSubjectChange}>

@@ -10,22 +10,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useStore, type Module } from "@/lib/store";
 import { confirmDelete, successToast } from "@/lib/swal";
 import { FolderOpen, Plus, FileText, Pencil, Trash2 } from "lucide-react";
+import { NoClassSelected } from "@/components/NoClassSelected";
 
 export const Route = createFileRoute("/teacher/modules")({ component: ModulesPage });
 
 function ModulesPage() {
-  const { modules, subjects, set, uid } = useStore();
+  const { modules, subjects, set, uid, activeClassId, classes } = useStore();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Module | null>(null);
   const [subjectId, setSubjectId] = useState("");
   const [title, setTitle] = useState("");
   const [fileLink, setFileLink] = useState("");
 
+  const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
+  const classModules = modules.filter((m) => m.classId === activeClassId);
+
   const openNew = () => { setEditing(null); setSubjectId(subjects[0]?.id ?? ""); setTitle(""); setFileLink(""); setOpen(true); };
   const openEdit = (m: Module) => { setEditing(m); setSubjectId(m.subjectId); setTitle(m.title); setFileLink(m.fileLink); setOpen(true); };
   const save = () => {
-    if (!title.trim() || !subjectId) return;
-    const data: Module = { id: editing?.id ?? uid(), subjectId, title, fileLink };
+    if (!title.trim() || !subjectId || !activeClassId) return;
+    const data: Module = { id: editing?.id ?? uid(), classId: activeClassId, subjectId, title, fileLink };
     if (editing) set("modules", modules.map((m) => m.id === editing.id ? data : m));
     else set("modules", [...modules, data]);
     successToast(editing ? "Modul diperbarui" : "Modul ditambahkan");
@@ -38,14 +42,16 @@ function ModulesPage() {
     }
   };
 
+  if (!activeClassId) return <NoClassSelected />;
+
   return (
     <div>
-      <PageHeader title="Kelola Modul" description="Organisasi file modul berdasarkan kategori."
+      <PageHeader title="Kelola Modul" description={`Modul untuk ${className}.`}
         actions={<Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Modul Baru</Button>} />
 
       <div className="space-y-4">
         {subjects.map((s) => {
-          const list = modules.filter((m) => m.subjectId === s.id);
+          const list = classModules.filter((m) => m.subjectId === s.id);
           return (
             <Card key={s.id}>
               <CardContent className="p-5">
@@ -82,6 +88,9 @@ function ModulesPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? "Edit Modul" : "Modul Baru"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
+            <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2 text-xs">
+              Kelas: <span className="font-semibold text-primary">{className}</span>
+            </div>
             <div>
               <Label>Kategori</Label>
               <Select value={subjectId} onValueChange={setSubjectId}>
