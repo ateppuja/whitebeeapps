@@ -23,6 +23,7 @@ function LoginPage() {
   const [name, setName] = useState("");
   const [adminInput, setAdminInput] = useState("");
   const [classId, setClassId] = useState<string>("");
+  const [studentSlot, setStudentSlot] = useState<string>(""); // "classId::status"
   const [code, setCode] = useState("");
 
   useEffect(() => {
@@ -33,14 +34,30 @@ function LoginPage() {
     if (!classId && classes[0]) setClassId(classes[0].id);
   }, [classes, classId]);
 
+  const studentSlots = useMemo(() => {
+    const out: { key: string; classId: string; status: "Reguler" | "Online"; label: string; count: number }[] = [];
+    for (const c of classes) {
+      for (const status of ["Reguler", "Online"] as const) {
+        const count = students.filter((s) => s.classId === c.id && s.status === status).length;
+        out.push({ key: `${c.id}::${status}`, classId: c.id, status, label: `${c.name} - ${status}`, count });
+      }
+    }
+    return out;
+  }, [classes, students]);
+
+  useEffect(() => {
+    if (!studentSlot && studentSlots[0]) setStudentSlot(studentSlots[0].key);
+  }, [studentSlots, studentSlot]);
+
   const teacherHint = useMemo(() => {
     const list = teachers.filter((t) => t.classIds.includes(classId));
     return list.length ? `${list.length} guru terdaftar untuk kelas ini` : "Belum ada guru untuk kelas ini";
   }, [teachers, classId]);
   const studentHint = useMemo(() => {
-    const list = students.filter((s) => s.classId === classId);
-    return list.length ? `${list.length} siswa terdaftar untuk kelas ini` : "Belum ada siswa untuk kelas ini";
-  }, [students, classId]);
+    const slot = studentSlots.find((s) => s.key === studentSlot);
+    if (!slot) return "";
+    return slot.count ? `${slot.count} siswa pada ${slot.label}` : `Belum ada siswa pada ${slot.label}`;
+  }, [studentSlots, studentSlot]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,10 +83,11 @@ function LoginPage() {
       navigate({ to: "/teacher" });
       return;
     }
-    if (!classId) { await swal.fire({ icon: "warning", title: "Pilih kelas" }); return; }
-    const st = students.find((x) => x.classId === classId && x.pin === code.trim());
+    const slot = studentSlots.find((s) => s.key === studentSlot);
+    if (!slot) { await swal.fire({ icon: "warning", title: "Pilih kelas" }); return; }
+    const st = students.find((x) => x.classId === slot.classId && x.status === slot.status && x.pin === code.trim());
     if (!st) {
-      await swal.fire({ icon: "error", title: "Kode siswa salah", text: "Kode tidak cocok dengan siswa pada kelas ini." });
+      await swal.fire({ icon: "error", title: "Kode siswa salah", text: "Kode tidak cocok dengan siswa pada kelas & status ini." });
       return;
     }
     login("student", st.name, st.id);
@@ -171,10 +189,12 @@ function LoginPage() {
               <>
                 <div>
                   <Label>Pilih Kelas</Label>
-                  <Select value={classId} onValueChange={setClassId}>
+                  <Select value={studentSlot} onValueChange={setStudentSlot}>
                     <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih kelas" /></SelectTrigger>
                     <SelectContent>
-                      {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {studentSlots.map((s) => (
+                        <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">{studentHint}</p>

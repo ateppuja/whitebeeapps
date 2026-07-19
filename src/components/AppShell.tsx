@@ -64,11 +64,15 @@ const ROLE_LABEL: Record<Role, string> = {
 };
 
 export function AppShell({ role, children }: { role: Role; children: ReactNode }) {
-  const { user, logout, teacherClasses, activeClassId, setActiveClassId } = useStore();
+  const { user, logout, teacherClasses, activeClassId, setActiveClassId, students } = useStore();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const items = NAV[role];
+  const currentStudent = role === "student" ? students.find((s) => s.id === user?.studentId) : undefined;
+  const isReguler = currentStudent?.status === "Reguler";
+  const items = role === "student" && isReguler
+    ? NAV.student.filter((it) => it.to === "/student" || it.to === "/student/observation")
+    : NAV[role];
 
   const handleLogout = async () => {
     const r = await swal.fire({
