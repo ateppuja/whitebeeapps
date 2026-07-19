@@ -75,12 +75,15 @@ function StudentsPage() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow><TableHead>Nama</TableHead><TableHead>Kode Siswa</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow>
+              <TableRow><TableHead>Nama</TableHead><TableHead>Status Kelas</TableHead><TableHead>Kode Siswa</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow>
             </TableHeader>
             <TableBody>
               {pageData.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.name}</TableCell>
+                  <TableCell>
+                    <Badge variant={s.status === "Online" ? "secondary" : "default"}>{s.status ?? "Reguler"}</Badge>
+                  </TableCell>
                   <TableCell><span className="font-mono">{s.pin}</span></TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
@@ -89,7 +92,7 @@ function StudentsPage() {
                 </TableRow>
               ))}
               {pageData.length === 0 && (
-                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">Tidak ada siswa.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Tidak ada siswa.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
