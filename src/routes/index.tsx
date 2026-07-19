@@ -68,7 +68,7 @@ function LoginPage() {
         await swal.fire({ icon: "error", title: "Kode admin salah", text: `Demo kode: ${adminCode}` });
         return;
       }
-      login("admin", name.trim() || "Admin Sekolah");
+      login("admin", "Admin Sekolah");
       successToast("Selamat datang, Admin!");
       navigate({ to: "/admin" });
       return;
