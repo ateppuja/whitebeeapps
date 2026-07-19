@@ -100,15 +100,24 @@ function LoginPage() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-background via-secondary/40 to-accent/30 flex items-center justify-center p-4">
       <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border bg-card shadow-xl md:grid-cols-2">
-        <div className="relative hidden md:flex flex-col justify-between bg-sidebar text-sidebar-foreground p-10">
-          <div>
+        <div className="relative hidden md:flex flex-col justify-between bg-sidebar text-sidebar-foreground p-10 overflow-hidden">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-15 bg-center bg-no-repeat"
+            style={{
+              backgroundSize: "80%",
+              backgroundImage:
+                "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 40 C60 25 100 25 100 40 L100 170 C100 155 60 155 20 170 Z'/><path d='M180 40 C140 25 100 25 100 40 L100 170 C100 155 140 155 180 170 Z'/><path d='M100 40 L100 170'/><path d='M35 65 L85 55'/><path d='M35 85 L85 75'/><path d='M35 105 L85 95'/><path d='M35 125 L85 115'/><path d='M115 55 L165 65'/><path d='M115 75 L165 85'/><path d='M115 95 L165 105'/><path d='M115 115 L165 125'/></g></svg>\")",
+            }}
+          />
+          <div className="relative">
             <div className="flex items-center gap-3">
               <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-sidebar-border/40 overflow-hidden">
                 <img src={logoAsset.url} alt="WhiteBee" className="h-12 w-12 object-contain" />
               </div>
               <div>
-                <div className="font-extrabold text-lg tracking-tight">WhiteBee LMS</div>
-                <div className="text-xs opacity-75">School Of Life · Adab &amp; Tarbiyah</div>
+                <div className="font-extrabold text-lg tracking-tight">White Bee School of Life</div>
+                <div className="text-xs opacity-75">Beriman · Beradab · Berilmu · Berguna</div>
               </div>
             </div>
 
@@ -119,7 +128,7 @@ function LoginPage() {
               Platform pembelajaran modern yang memadukan LMS dengan observasi Adab &amp; Tarbiyah untuk pertumbuhan siswa yang utuh.
             </p>
           </div>
-          <div className="text-xs opacity-60">© {new Date().getFullYear()} WhiteBee Education</div>
+          <div className="relative text-xs opacity-60">© {new Date().getFullYear()} WhiteBee Education</div>
         </div>
 
         <div className="p-6 md:p-10">
