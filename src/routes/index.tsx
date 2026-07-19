@@ -22,8 +22,8 @@ function LoginPage() {
   const { user, login, teachers, students, classes, adminCode } = useStore();
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>("student");
-  const [name, setName] = useState("");
   const [adminInput, setAdminInput] = useState("");
+
   const [classId, setClassId] = useState<string>("");
   const [studentSlot, setStudentSlot] = useState<string>(""); // "classId::status"
   const [code, setCode] = useState("");
@@ -68,7 +68,7 @@ function LoginPage() {
         await swal.fire({ icon: "error", title: "Kode admin salah", text: `Demo kode: ${adminCode}` });
         return;
       }
-      login("admin", name.trim() || "Admin Sekolah");
+      login("admin", "Admin Sekolah");
       successToast("Selamat datang, Admin!");
       navigate({ to: "/admin" });
       return;
@@ -156,18 +156,13 @@ function LoginPage() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {role === "admin" && (
-              <>
-                <div>
-                  <Label htmlFor="name">Nama Admin</Label>
-                  <Input id="name" placeholder="Admin Sekolah" value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" />
-                </div>
-                <div>
-                  <Label htmlFor="adminCode">Kode Khusus Admin</Label>
-                  <Input id="adminCode" type="password" placeholder="Masukkan kode admin" value={adminInput} onChange={(e) => setAdminInput(e.target.value)} className="mt-1.5 font-mono" />
-                  <p className="text-xs text-muted-foreground mt-1">Demo kode: <span className="font-mono">{adminCode}</span></p>
-                </div>
-              </>
+              <div>
+                <Label htmlFor="adminCode">Kode Khusus Admin</Label>
+                <Input id="adminCode" type="password" placeholder="Masukkan kode admin" value={adminInput} onChange={(e) => setAdminInput(e.target.value)} className="mt-1.5 font-mono" />
+                <p className="text-xs text-muted-foreground mt-1">Demo kode: <span className="font-mono">{adminCode}</span></p>
+              </div>
             )}
+
 
             {role === "teacher" && (
               <>
