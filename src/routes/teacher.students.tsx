@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useStore, type Student } from "@/lib/store";
+import { useStore, type Student, type StudentStatus } from "@/lib/store";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { confirmDelete, successToast } from "@/lib/swal";
 import { Pencil, Plus, Search, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { NoClassSelected } from "@/components/NoClassSelected";
@@ -22,6 +24,7 @@ function StudentsPage() {
   const [editing, setEditing] = useState<Student | null>(null);
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
+  const [status, setStatus] = useState<StudentStatus>("Reguler");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
 
@@ -37,11 +40,11 @@ function StudentsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageData = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const openNew = () => { setEditing(null); setName(""); setPin(""); setOpen(true); };
-  const openEdit = (s: Student) => { setEditing(s); setName(s.name); setPin(s.pin); setOpen(true); };
+  const openNew = () => { setEditing(null); setName(""); setPin(""); setStatus("Reguler"); setOpen(true); };
+  const openEdit = (s: Student) => { setEditing(s); setName(s.name); setPin(s.pin); setStatus(s.status ?? "Reguler"); setOpen(true); };
   const save = () => {
     if (!name.trim() || !pin.trim() || !activeClassId) return;
-    const data: Student = { id: editing?.id ?? uid(), name, pin, classId: activeClassId };
+    const data: Student = { id: editing?.id ?? uid(), name, pin, classId: activeClassId, status };
     if (editing) set("students", students.map((x) => x.id === editing.id ? data : x));
     else set("students", [...students, data]);
     successToast("Tersimpan");
@@ -72,12 +75,15 @@ function StudentsPage() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow><TableHead>Nama</TableHead><TableHead>Kode Siswa</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow>
+              <TableRow><TableHead>Nama</TableHead><TableHead>Status Kelas</TableHead><TableHead>Kode Siswa</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow>
             </TableHeader>
             <TableBody>
               {pageData.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.name}</TableCell>
+                  <TableCell>
+                    <Badge variant={s.status === "Online" ? "secondary" : "default"}>{s.status ?? "Reguler"}</Badge>
+                  </TableCell>
                   <TableCell><span className="font-mono">{s.pin}</span></TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
@@ -86,7 +92,7 @@ function StudentsPage() {
                 </TableRow>
               ))}
               {pageData.length === 0 && (
-                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">Tidak ada siswa.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Tidak ada siswa.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -108,6 +114,16 @@ function StudentsPage() {
               Kelas: <span className="font-semibold text-primary">{className}</span>
             </div>
             <div><Label>Nama</Label><Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" /></div>
+            <div>
+              <Label>Status Kelas</Label>
+              <Select value={status} onValueChange={(v) => setStatus(v as StudentStatus)}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Reguler">Reguler</SelectItem>
+                  <SelectItem value="Online">Online</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Kode Siswa</Label><Input value={pin} onChange={(e) => setPin(e.target.value)} className="mt-1.5 font-mono" placeholder="Contoh: 1234" /></div>
           </div>
           <DialogFooter>
