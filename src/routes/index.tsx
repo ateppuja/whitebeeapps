@@ -156,18 +156,13 @@ function LoginPage() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {role === "admin" && (
-              <>
-                <div>
-                  <Label htmlFor="name">Nama Admin</Label>
-                  <Input id="name" placeholder="Admin Sekolah" value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" />
-                </div>
-                <div>
-                  <Label htmlFor="adminCode">Kode Khusus Admin</Label>
-                  <Input id="adminCode" type="password" placeholder="Masukkan kode admin" value={adminInput} onChange={(e) => setAdminInput(e.target.value)} className="mt-1.5 font-mono" />
-                  <p className="text-xs text-muted-foreground mt-1">Demo kode: <span className="font-mono">{adminCode}</span></p>
-                </div>
-              </>
+              <div>
+                <Label htmlFor="adminCode">Kode Khusus Admin</Label>
+                <Input id="adminCode" type="password" placeholder="Masukkan kode admin" value={adminInput} onChange={(e) => setAdminInput(e.target.value)} className="mt-1.5 font-mono" />
+                <p className="text-xs text-muted-foreground mt-1">Demo kode: <span className="font-mono">{adminCode}</span></p>
+              </div>
             )}
+
 
             {role === "teacher" && (
               <>
