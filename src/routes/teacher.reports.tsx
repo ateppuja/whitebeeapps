@@ -54,14 +54,26 @@ function ReportsPage() {
 
   const months = useMemo(() => monthsInRange(fromMonth, toMonth), [fromMonth, toMonth]);
 
-  const filled = useMemo(() => {
-    // students who filled at least one month in range
-    const set = new Set<string>();
-    observations.forEach((o) => {
-      if (months.includes(o.month)) set.add(o.studentId);
+  // per-student: how many months in range have any observation entries
+  const studentProgress = useMemo(() => {
+    const map = new Map<string, { done: number; total: number; pct: number }>();
+    classStudents.forEach((s) => {
+      const done = months.reduce((acc, mo) => {
+        const rec = observations.find((o) => o.studentId === s.id && o.month === mo);
+        return acc + (rec && rec.entries.length > 0 ? 1 : 0);
+      }, 0);
+      const total = months.length || 1;
+      map.set(s.id, { done, total, pct: Math.round((done / total) * 100) });
     });
+    return map;
+  }, [classStudents, observations, months]);
+
+  const filled = useMemo(() => {
+    const set = new Set<string>();
+    studentProgress.forEach((v, k) => { if (v.done > 0) set.add(k); });
     return set;
-  }, [observations, months]);
+  }, [studentProgress]);
+
 
   if (!activeClassId) return <NoClassSelected />;
   const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
