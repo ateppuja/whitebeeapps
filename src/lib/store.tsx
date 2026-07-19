@@ -147,9 +147,9 @@ const initialState: StoreState = {
     { id: uid(), classId: C2, day: "Rabu", subject: "Matematika" },
   ],
   students: [
-    { id: "st1", name: "Ahmad Fauzi", pin: "1234", classId: C1 },
-    { id: "st2", name: "Siti Nurhaliza", pin: "2345", classId: C1 },
-    { id: "st3", name: "Bilal Rahman", pin: "3456", classId: C2 },
+    { id: "st1", name: "Ahmad Fauzi", pin: "1234", classId: C1, status: "Reguler" },
+    { id: "st2", name: "Siti Nurhaliza", pin: "2345", classId: C1, status: "Online" },
+    { id: "st3", name: "Bilal Rahman", pin: "3456", classId: C2, status: "Reguler" },
   ],
   indicators: (() => {
     const m = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}`;
