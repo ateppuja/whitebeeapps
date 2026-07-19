@@ -22,8 +22,8 @@ function LoginPage() {
   const { user, login, teachers, students, classes, adminCode } = useStore();
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>("student");
-  const [name, setName] = useState("");
   const [adminInput, setAdminInput] = useState("");
+
   const [classId, setClassId] = useState<string>("");
   const [studentSlot, setStudentSlot] = useState<string>(""); // "classId::status"
   const [code, setCode] = useState("");
