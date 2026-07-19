@@ -154,14 +154,7 @@ interface StoreContextType extends StoreState {
   uid: () => string;
 }
 
-  user: User | null;
-  login: (role: Role, name: string) => void;
-  logout: () => void;
-  set: <K extends keyof StoreState>(key: K, value: StoreState[K]) => void;
-  update: (updater: (s: StoreState) => Partial<StoreState>) => void;
-  saveObservation: (rec: ObservationRecord) => void;
-  uid: () => string;
-}
+
 
 const StoreContext = createContext<StoreContextType | null>(null);
 
