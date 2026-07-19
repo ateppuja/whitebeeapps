@@ -43,6 +43,7 @@ const NAV: Record<Role, NavItem[]> = {
     { to: "/teacher/schedule", label: "Jadwal Pelajaran", icon: Calendar },
     { to: "/teacher/students", label: "Manajemen Siswa", icon: Users },
     { to: "/teacher/indicators", label: "Indikator Observasi", icon: ClipboardList },
+    { to: "/teacher/observation", label: "Input Observasi", icon: ClipboardList },
     { to: "/teacher/reports", label: "Progress & Laporan", icon: BarChart3 },
     { to: "/teacher/announcements", label: "Pengumuman", icon: Megaphone },
   ],
