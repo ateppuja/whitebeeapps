@@ -134,9 +134,9 @@ function ObservationPage() {
                     </thead>
                     <tbody>
                       {Object.entries(grouped).map(([grp, items]) => (
-                        <>
+                        <Fragment key={grp}>
                           {cat === "Adab" && (
-                            <tr key={`h-${grp}`} className="bg-primary/5">
+                            <tr className="bg-primary/5">
                               <td colSpan={6} className="p-2 px-3 text-xs font-bold uppercase tracking-wide text-primary">{grp}</td>
                             </tr>
                           )}
@@ -163,7 +163,7 @@ function ObservationPage() {
                               </td>
                             </tr>
                           ))}
-                        </>
+                        </Fragment>
                       ))}
                       {list.length === 0 && (
                         <tr><td colSpan={6} className="p-6 text-center text-muted-foreground italic">Belum ada indikator untuk kelasmu.</td></tr>
