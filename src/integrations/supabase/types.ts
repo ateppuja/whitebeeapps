@@ -14,7 +14,285 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      adab_titles: {
+        Row: {
+          created_at: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      announcements: {
+        Row: {
+          class_id: string
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          text?: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      classes: {
+        Row: {
+          created_at: string
+          grade: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          grade: string
+          id: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          grade?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      indicators: {
+        Row: {
+          category: string
+          class_id: string
+          created_at: string
+          id: string
+          month: string
+          text: string
+          title: string | null
+        }
+        Insert: {
+          category: string
+          class_id: string
+          created_at?: string
+          id: string
+          month: string
+          text: string
+          title?: string | null
+        }
+        Update: {
+          category?: string
+          class_id?: string
+          created_at?: string
+          id?: string
+          month?: string
+          text?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
+      materials: {
+        Row: {
+          class_id: string
+          created_at: string
+          file_link: string | null
+          id: string
+          instructions: string | null
+          publish_date: string
+          subject_id: string
+          title: string
+          video_link: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          file_link?: string | null
+          id: string
+          instructions?: string | null
+          publish_date: string
+          subject_id: string
+          title: string
+          video_link?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          file_link?: string | null
+          id?: string
+          instructions?: string | null
+          publish_date?: string
+          subject_id?: string
+          title?: string
+          video_link?: string | null
+        }
+        Relationships: []
+      }
+      modules: {
+        Row: {
+          class_id: string
+          created_at: string
+          file_link: string
+          id: string
+          subject_id: string
+          title: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          file_link: string
+          id: string
+          subject_id: string
+          title: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          file_link?: string
+          id?: string
+          subject_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      observations: {
+        Row: {
+          entries: Json
+          month: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          entries?: Json
+          month: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          entries?: Json
+          month?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedule: {
+        Row: {
+          class_id: string
+          created_at: string
+          day: string
+          id: string
+          subject: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          day: string
+          id: string
+          subject: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          day?: string
+          id?: string
+          subject?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          name: string
+          pin: string
+          status: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id: string
+          name: string
+          pin: string
+          status: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          pin?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      subjects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          class_ids: Json
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          class_ids?: Json
+          code: string
+          created_at?: string
+          id: string
+          name: string
+        }
+        Update: {
+          class_ids?: Json
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
