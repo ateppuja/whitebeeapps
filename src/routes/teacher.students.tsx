@@ -120,11 +120,10 @@ function StudentsPage() {
               <Select value={status} onValueChange={(v) => setStatus(v as StudentStatus)}>
                 <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Reguler">Reguler — akses penuh di kelas</SelectItem>
-                  <SelectItem value="Online">Online — akses pembelajaran daring</SelectItem>
+                  <SelectItem value="Reguler">Reguler</SelectItem>
+                  <SelectItem value="Online">Online</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground mt-1">Menentukan hak akses siswa.</p>
             </div>
           </div>
           <DialogFooter>
