@@ -179,13 +179,17 @@ function MaterialsPage() {
                   <Button type="button" variant="outline" onClick={() => setNewCatMode(false)}>Batal</Button>
                 </div>
               ) : (
-                <Select value={subjectId} onValueChange={handleSubjectChange}>
-                  <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                    <SelectItem value={ADD_NEW}>+ Tambah Kategori Baru</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="mt-1.5 flex gap-2">
+                  <Select value={subjectId} onValueChange={setSubjectId}>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
+                    <SelectContent>
+                      {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" onClick={() => { setNewCatMode(true); setNewCatName(""); }}>
+                    <Plus className="h-4 w-4 mr-1" /> Kategori
+                  </Button>
+                </div>
               )}
             </div>
             <div><Label>Judul</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1.5" /></div>
