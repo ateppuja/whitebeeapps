@@ -114,6 +114,16 @@ function StudentsPage() {
               Kelas: <span className="font-semibold text-primary">{className}</span>
             </div>
             <div><Label>Nama</Label><Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" /></div>
+            <div>
+              <Label>Status Kelas</Label>
+              <Select value={status} onValueChange={(v) => setStatus(v as StudentStatus)}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Reguler">Reguler</SelectItem>
+                  <SelectItem value="Online">Online</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Kode Siswa</Label><Input value={pin} onChange={(e) => setPin(e.target.value)} className="mt-1.5 font-mono" placeholder="Contoh: 1234" /></div>
           </div>
           <DialogFooter>
