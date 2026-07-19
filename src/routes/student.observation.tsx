@@ -1,0 +1,170 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { PageHeader } from "@/components/AppShell";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { useStore, type IndicatorCategory, type ObservationValue } from "@/lib/store";
+import { successToast } from "@/lib/swal";
+import { Heart, Save, Sparkles } from "lucide-react";
+
+export const Route = createFileRoute("/student/observation")({ component: ObservationPage });
+
+const VALUES: { v: ObservationValue; label: string }[] = [
+  { v: "BB", label: "Belum Berkembang" },
+  { v: "MB", label: "Mulai Berkembang" },
+  { v: "BSH", label: "Berkembang Sesuai Harapan" },
+  { v: "BSB", label: "Berkembang Sangat Baik" },
+];
+
+const MONTHS = ["01","02","03","04","05","06","07","08","09","10","11","12"];
+const MONTH_LABEL: Record<string,string> = {
+  "01":"Januari","02":"Februari","03":"Maret","04":"April","05":"Mei","06":"Juni",
+  "07":"Juli","08":"Agustus","09":"September","10":"Oktober","11":"November","12":"Desember"
+};
+
+function ObservationPage() {
+  const { indicators, observations, user, students, saveObservation } = useStore();
+  const now = new Date();
+  const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`);
+  const [entries, setEntries] = useState<Record<string, { value: ObservationValue; note: string }>>({});
+
+  // Match logged-in user by name (mock)
+  const student = useMemo(
+    () => students.find((s) => s.name.toLowerCase() === (user?.name ?? "").toLowerCase()) ?? students[0],
+    [students, user]
+  );
+
+  useEffect(() => {
+    if (!student) return;
+    const rec = observations.find((o) => o.studentId === student.id && o.month === month);
+    const next: typeof entries = {};
+    indicators.forEach((i) => {
+      const e = rec?.entries.find((x) => x.indicatorId === i.id);
+      next[i.id] = { value: e?.value ?? "BB", note: e?.note ?? "" };
+    });
+    setEntries(next);
+  }, [student, month, observations, indicators]);
+
+  const setValue = (id: string, value: ObservationValue) =>
+    setEntries((p) => ({ ...p, [id]: { ...p[id], value } }));
+  const setNote = (id: string, note: string) =>
+    setEntries((p) => ({ ...p, [id]: { ...p[id], note } }));
+
+  const save = () => {
+    if (!student) return;
+    saveObservation({
+      studentId: student.id,
+      month,
+      entries: indicators.map((i) => ({
+        indicatorId: i.id,
+        value: entries[i.id]?.value ?? "BB",
+        note: entries[i.id]?.note ?? "",
+      })),
+    });
+    successToast("Data observasi tersimpan");
+  };
+
+  const groups: { cat: IndicatorCategory; icon: typeof Heart; tone: string }[] = [
+    { cat: "Adab", icon: Heart, tone: "bg-primary/10 text-primary" },
+    { cat: "Tarbiyah", icon: Sparkles, tone: "bg-accent text-accent-foreground" },
+  ];
+
+  const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
+
+  return (
+    <div>
+      <PageHeader title="Matriks Observasi" description="Refleksikan pertumbuhan Adab dan Tarbiyah-mu setiap bulan." />
+
+      <Card className="mb-4">
+        <CardContent className="p-4 flex flex-wrap items-center gap-3">
+          <Label className="text-sm font-semibold">Bulan penilaian:</Label>
+          <Select value={month} onValueChange={setMonth}>
+            <SelectTrigger className="w-[220px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {years.flatMap((y) => MONTHS.map((m) => (
+                <SelectItem key={`${y}-${m}`} value={`${y}-${m}`}>{MONTH_LABEL[m]} {y}</SelectItem>
+              )))}
+            </SelectContent>
+          </Select>
+          <div className="text-xs text-muted-foreground ml-auto">Siswa: <span className="font-semibold text-foreground">{student?.name ?? "-"}</span></div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-4">
+        {groups.map(({ cat, icon: Icon, tone }) => {
+          const list = indicators.filter((i) => i.category === cat);
+          return (
+            <Card key={cat}>
+              <CardContent className="p-0">
+                <div className="flex items-center gap-2 p-5 border-b">
+                  <div className={`grid h-10 w-10 place-items-center rounded-lg ${tone}`}><Icon className="h-5 w-5" /></div>
+                  <div>
+                    <div className="font-bold text-lg">{cat}</div>
+                    <div className="text-xs text-muted-foreground">{list.length} indikator</div>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-3 min-w-[220px]">Indikator</th>
+                        {VALUES.map((v) => (
+                          <th key={v.v} className="p-3 text-center text-xs font-semibold" title={v.label}>{v.v}</th>
+                        ))}
+                        <th className="text-left p-3 min-w-[200px]">Catatan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {list.map((i) => (
+                        <tr key={i.id} className="border-t">
+                          <td className="p-3 align-top">{i.text}</td>
+                          {(() => {
+                            const val = entries[i.id]?.value ?? "BB";
+                            return (
+                              <>
+                                <td colSpan={4} className="p-3">
+                                  <RadioGroup value={val} onValueChange={(v) => setValue(i.id, v as ObservationValue)} className="flex justify-around">
+                                    {VALUES.map((v) => (
+                                      <div key={v.v} className="flex flex-col items-center gap-1">
+                                        <RadioGroupItem id={`${i.id}-${v.v}`} value={v.v} />
+                                        <Label htmlFor={`${i.id}-${v.v}`} className="text-[10px] text-muted-foreground">{v.v}</Label>
+                                      </div>
+                                    ))}
+                                  </RadioGroup>
+                                </td>
+                              </>
+                            );
+                          })()}
+                          <td className="p-3 align-top">
+                            <Textarea rows={2} value={entries[i.id]?.note ?? ""} onChange={(e) => setNote(i.id, e.target.value)} placeholder="Catatan..." className="text-xs" />
+                          </td>
+                        </tr>
+                      ))}
+                      {list.length === 0 && (
+                        <tr><td colSpan={6} className="p-6 text-center text-muted-foreground italic">Belum ada indikator.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <Button size="lg" onClick={save} className="h-12 px-8 text-base font-bold">
+          <Save className="h-5 w-5 mr-2" /> Simpan &amp; Update Data
+        </Button>
+      </div>
+
+      <div className="mt-4 text-xs text-muted-foreground">
+        Keterangan: {VALUES.map((v) => `${v.v} = ${v.label}`).join(" · ")}
+      </div>
+    </div>
+  );
+}
