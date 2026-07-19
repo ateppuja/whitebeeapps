@@ -88,12 +88,15 @@ function ReportsPage() {
       await swal.fire({ icon: "warning", title: "Pilih minimal 1 siswa", timer: 1600, showConfirmButton: false });
       return;
     }
-    const catIndicators = indicators.filter((i) => i.category === cat && i.classId === activeClassId);
     const rangeLabel = months.length === 1 ? labelMonth(months[0]) : `${labelMonth(months[0])} – ${labelMonth(months[months.length-1])}`;
 
     const studentBlocks = targets.map((s) => {
       const monthBlocks = months.map((mo) => {
         const rec = observations.find((o) => o.studentId === s.id && o.month === mo);
+        const catIndicators = indicators.filter((i) => i.category === cat && i.classId === activeClassId && i.month === mo);
+        if (catIndicators.length === 0) {
+          return `<h4>${labelMonth(mo)}</h4><p><i>Belum ada indikator untuk bulan ini.</i></p>`;
+        }
         const rows = catIndicators.map((ind) => {
           const e = rec?.entries.find((x) => x.indicatorId === ind.id);
           const label = cat === "Adab" && ind.title ? `<b>${ind.title}</b> — ${ind.text}` : ind.text;
@@ -103,6 +106,7 @@ function ReportsPage() {
       }).join("<br/>");
       return `<h2>${s.name}</h2>${monthBlocks}<hr/>`;
     }).join("");
+
 
     const html = `<html><head><meta charset="utf-8"><title>Laporan ${cat} - ${className}</title></head><body>
       <h1>Laporan Observasi ${cat} — ${className}</h1>

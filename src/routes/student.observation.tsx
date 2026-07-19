@@ -38,9 +38,10 @@ function ObservationPage() {
   );
 
   const classIndicators = useMemo(
-    () => indicators.filter((i) => i.classId === student?.classId),
-    [indicators, student]
+    () => indicators.filter((i) => i.classId === student?.classId && i.month === month),
+    [indicators, student, month]
   );
+
 
   useEffect(() => {
     if (!student) return;
