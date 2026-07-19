@@ -185,9 +185,9 @@ interface StoreContextType extends StoreState {
 
 const StoreContext = createContext<StoreContextType | null>(null);
 
-const STORAGE_KEY = "whitebee-lms-v2";
-const USER_KEY = "whitebee-lms-user-v2";
-const ACTIVE_CLASS_KEY = "whitebee-lms-active-class-v2";
+const STORAGE_KEY = "whitebee-lms-v3";
+const USER_KEY = "whitebee-lms-user-v3";
+const ACTIVE_CLASS_KEY = "whitebee-lms-active-class-v3";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StoreState>(initialState);
