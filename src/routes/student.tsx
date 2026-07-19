@@ -14,8 +14,8 @@ function StudentLayout() {
     if (!hydrated) return;
     if (!user) { navigate({ to: "/" }); return; }
     if (user.role !== "student") navigate({ to: "/" });
-  }, [user, navigate]);
-  if (!user || user.role !== "student") return null;
+  }, [user, hydrated, navigate]);
+  if (!hydrated || !user || user.role !== "student") return null;
   return (
     <AppShell role="student">
       <Outlet />

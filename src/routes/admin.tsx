@@ -14,8 +14,8 @@ function AdminLayout() {
     if (!hydrated) return;
     if (!user) { navigate({ to: "/" }); return; }
     if (user.role !== "admin") navigate({ to: "/" });
-  }, [user, navigate]);
-  if (!user || user.role !== "admin") return null;
+  }, [user, hydrated, navigate]);
+  if (!hydrated || !user || user.role !== "admin") return null;
   return (
     <AppShell role="admin">
       <Outlet />

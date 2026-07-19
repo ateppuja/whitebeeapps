@@ -14,8 +14,8 @@ function TeacherLayout() {
     if (!hydrated) return;
     if (!user) { navigate({ to: "/" }); return; }
     if (user.role !== "teacher") navigate({ to: "/" });
-  }, [user, navigate]);
-  if (!user || user.role !== "teacher") return null;
+  }, [user, hydrated, navigate]);
+  if (!hydrated || !user || user.role !== "teacher") return null;
   return (
     <AppShell role="teacher">
       <Outlet />
