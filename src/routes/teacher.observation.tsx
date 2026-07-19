@@ -94,7 +94,7 @@ function TeacherObservationPage() {
 
   return (
     <div>
-      <PageHeader title="Input Observasi" description={`Isi matriks observasi Adab & Tarbiyah per siswa dan per bulan untuk ${className}.`} />
+      <PageHeader title="Lihat Observasi" description={`Isi matriks observasi Adab & Tarbiyah per siswa dan per bulan untuk ${className}.`} />
 
       <Card className="mb-4">
         <CardContent className="p-4 grid gap-3 sm:grid-cols-[1fr_220px_auto]">
