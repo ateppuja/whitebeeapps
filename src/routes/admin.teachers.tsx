@@ -18,22 +18,24 @@ function TeachersPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Teacher | null>(null);
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [classIds, setClassIds] = useState<string[]>([]);
 
-  const openNew = () => { setEditing(null); setName(""); setClassIds([]); setOpen(true); };
-  const openEdit = (t: Teacher) => { setEditing(t); setName(t.name); setClassIds(t.classIds); setOpen(true); };
+  const openNew = () => { setEditing(null); setName(""); setCode(""); setClassIds([]); setOpen(true); };
+  const openEdit = (t: Teacher) => { setEditing(t); setName(t.name); setCode(t.code); setClassIds(t.classIds); setOpen(true); };
 
   const toggle = (id: string) =>
     setClassIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   const save = () => {
-    if (!name.trim()) return;
-    const data: Teacher = { id: editing?.id ?? uid(), name: name.trim(), classIds };
+    if (!name.trim() || !code.trim()) return;
+    const data: Teacher = { id: editing?.id ?? uid(), name: name.trim(), code: code.trim(), classIds };
     if (editing) set("teachers", teachers.map((t) => (t.id === editing.id ? data : t)));
     else set("teachers", [...teachers, data]);
     successToast("Tersimpan");
     setOpen(false);
   };
+
 
   const remove = async (t: Teacher) => {
     if (await confirmDelete(t.name)) {
