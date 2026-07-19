@@ -128,7 +128,7 @@ function LoginPage() {
               Platform pembelajaran modern yang memadukan LMS dengan observasi Adab &amp; Tarbiyah untuk pertumbuhan siswa yang utuh.
             </p>
           </div>
-          <div className="text-xs opacity-60">© {new Date().getFullYear()} WhiteBee Education</div>
+          <div className="relative text-xs opacity-60">© {new Date().getFullYear()} WhiteBee Education</div>
         </div>
 
         <div className="p-6 md:p-10">
