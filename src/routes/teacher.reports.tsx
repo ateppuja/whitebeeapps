@@ -54,14 +54,26 @@ function ReportsPage() {
 
   const months = useMemo(() => monthsInRange(fromMonth, toMonth), [fromMonth, toMonth]);
 
-  const filled = useMemo(() => {
-    // students who filled at least one month in range
-    const set = new Set<string>();
-    observations.forEach((o) => {
-      if (months.includes(o.month)) set.add(o.studentId);
+  // per-student: how many months in range have any observation entries
+  const studentProgress = useMemo(() => {
+    const map = new Map<string, { done: number; total: number; pct: number }>();
+    classStudents.forEach((s) => {
+      const done = months.reduce((acc, mo) => {
+        const rec = observations.find((o) => o.studentId === s.id && o.month === mo);
+        return acc + (rec && rec.entries.length > 0 ? 1 : 0);
+      }, 0);
+      const total = months.length || 1;
+      map.set(s.id, { done, total, pct: Math.round((done / total) * 100) });
     });
+    return map;
+  }, [classStudents, observations, months]);
+
+  const filled = useMemo(() => {
+    const set = new Set<string>();
+    studentProgress.forEach((v, k) => { if (v.done > 0) set.add(k); });
     return set;
-  }, [observations, months]);
+  }, [studentProgress]);
+
 
   if (!activeClassId) return <NoClassSelected />;
   const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
@@ -212,19 +224,29 @@ function ReportsPage() {
             </Button>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            {classStudents.map((s) => (
-              <label key={s.id} className="flex items-center gap-2 rounded-lg border p-3 cursor-pointer hover:bg-accent/50">
-                <Checkbox checked={selectedStudents.has(s.id)} onCheckedChange={() => toggleStudent(s.id)} />
-                <span className="text-sm flex-1">{s.name}</span>
-                <span className={`text-[11px] font-semibold ${filled.has(s.id) ? "text-primary" : "text-muted-foreground"}`}>
-                  {filled.has(s.id) ? "Terisi" : "Kosong"}
-                </span>
-              </label>
-            ))}
+            {classStudents.map((s) => {
+              const prog = studentProgress.get(s.id) ?? { done: 0, total: months.length || 1, pct: 0 };
+              return (
+                <label key={s.id} className="flex items-center gap-3 rounded-xl border p-3 cursor-pointer hover:bg-accent/40 transition">
+                  <Checkbox checked={selectedStudents.has(s.id)} onCheckedChange={() => toggleStudent(s.id)} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium truncate">{s.name}</span>
+                      <span className={`text-xs font-bold ${prog.pct === 100 ? "text-primary" : prog.pct > 0 ? "text-amber-600" : "text-muted-foreground"}`}>
+                        {prog.pct}%
+                      </span>
+                    </div>
+                    <Progress value={prog.pct} className="h-1.5 mt-1.5" />
+                    <div className="text-[10px] text-muted-foreground mt-1">{prog.done}/{prog.total} bulan terisi</div>
+                  </div>
+                </label>
+              );
+            })}
             {classStudents.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-6 sm:col-span-2">Belum ada siswa di kelas ini.</p>
             )}
           </div>
+
           <div className="mt-4 flex flex-wrap gap-2 justify-end">
             <Button variant="outline" onClick={() => exportDoc("Adab")}><Download className="h-4 w-4 mr-1" /> Export Adab (DOC)</Button>
             <Button onClick={() => exportDoc("Tarbiyah")}><FileText className="h-4 w-4 mr-1" /> Export Tarbiyah (DOC)</Button>

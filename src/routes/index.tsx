@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, Shield, BookOpen, User } from "lucide-react";
+import logoAsset from "@/assets/whitebee-logo.png.asset.json";
+
 
 export const Route = createFileRoute("/")({ component: LoginPage });
 
@@ -100,15 +102,16 @@ function LoginPage() {
       <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border bg-card shadow-xl md:grid-cols-2">
         <div className="relative hidden md:flex flex-col justify-between bg-sidebar text-sidebar-foreground p-10">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-                <GraduationCap className="h-6 w-6" />
+            <div className="flex items-center gap-3">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-sidebar-border/40 overflow-hidden">
+                <img src={logoAsset.url} alt="WhiteBee" className="h-12 w-12 object-contain" />
               </div>
               <div>
-                <div className="font-bold text-lg">WhiteBee LMS</div>
-                <div className="text-xs opacity-70">Adab &amp; Tarbiyah</div>
+                <div className="font-extrabold text-lg tracking-tight">WhiteBee LMS</div>
+                <div className="text-xs opacity-75">School Of Life · Adab &amp; Tarbiyah</div>
               </div>
             </div>
+
             <h2 className="mt-12 text-3xl font-bold leading-tight">
               Belajar sepenuh hati, <br /> tumbuh berkarakter.
             </h2>
@@ -121,11 +124,12 @@ function LoginPage() {
 
         <div className="p-6 md:p-10">
           <div className="mb-6 md:hidden flex items-center gap-2">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <GraduationCap className="h-5 w-5" />
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-white shadow ring-1 ring-border overflow-hidden">
+              <img src={logoAsset.url} alt="WhiteBee" className="h-10 w-10 object-contain" />
             </div>
             <div className="font-bold">WhiteBee LMS</div>
           </div>
+
           <h1 className="text-2xl font-bold">Masuk ke akun Anda</h1>
           <p className="text-sm text-muted-foreground mt-1">Pilih peran untuk demo dan mulai eksplorasi.</p>
 
