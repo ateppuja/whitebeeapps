@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -101,6 +101,16 @@ function ObservationPage() {
       <div className="space-y-4">
         {groups.map(({ cat, icon: Icon, tone }) => {
           const list = classIndicators.filter((i) => i.category === cat);
+          // Group Adab by title; Tarbiyah as single group
+          const grouped: Record<string, typeof list> = {};
+          if (cat === "Adab") {
+            list.forEach((i) => {
+              const k = i.title || "(Tanpa Judul)";
+              (grouped[k] ||= []).push(i);
+            });
+          } else {
+            grouped["__all__"] = list;
+          }
           return (
             <Card key={cat}>
               <CardContent className="p-0">
@@ -123,28 +133,37 @@ function ObservationPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {list.map((i) => (
-                        <tr key={i.id} className="border-t">
-                          <td className="p-3 align-top">{i.text}</td>
-                          {(() => {
-                            const val = entries[i.id]?.value ?? "BB";
-                            return (
-                              <td colSpan={4} className="p-3">
-                                <RadioGroup value={val} onValueChange={(v) => setValue(i.id, v as ObservationValue)} className="flex justify-around">
-                                  {VALUES.map((v) => (
-                                    <div key={v.v} className="flex flex-col items-center gap-1">
-                                      <RadioGroupItem id={`${i.id}-${v.v}`} value={v.v} />
-                                      <Label htmlFor={`${i.id}-${v.v}`} className="text-[10px] text-muted-foreground">{v.v}</Label>
-                                    </div>
-                                  ))}
-                                </RadioGroup>
+                      {Object.entries(grouped).map(([grp, items]) => (
+                        <Fragment key={grp}>
+                          {cat === "Adab" && (
+                            <tr className="bg-primary/5">
+                              <td colSpan={6} className="p-2 px-3 text-xs font-bold uppercase tracking-wide text-primary">{grp}</td>
+                            </tr>
+                          )}
+                          {items.map((i) => (
+                            <tr key={i.id} className="border-t">
+                              <td className="p-3 align-top">{i.text}</td>
+                              {(() => {
+                                const val = entries[i.id]?.value ?? "BB";
+                                return (
+                                  <td colSpan={4} className="p-3">
+                                    <RadioGroup value={val} onValueChange={(v) => setValue(i.id, v as ObservationValue)} className="flex justify-around">
+                                      {VALUES.map((v) => (
+                                        <div key={v.v} className="flex flex-col items-center gap-1">
+                                          <RadioGroupItem id={`${i.id}-${v.v}`} value={v.v} />
+                                          <Label htmlFor={`${i.id}-${v.v}`} className="text-[10px] text-muted-foreground">{v.v}</Label>
+                                        </div>
+                                      ))}
+                                    </RadioGroup>
+                                  </td>
+                                );
+                              })()}
+                              <td className="p-3 align-top">
+                                <Textarea rows={2} value={entries[i.id]?.note ?? ""} onChange={(e) => setNote(i.id, e.target.value)} placeholder="Catatan..." className="text-xs" />
                               </td>
-                            );
-                          })()}
-                          <td className="p-3 align-top">
-                            <Textarea rows={2} value={entries[i.id]?.note ?? ""} onChange={(e) => setNote(i.id, e.target.value)} placeholder="Catatan..." className="text-xs" />
-                          </td>
-                        </tr>
+                            </tr>
+                          ))}
+                        </Fragment>
                       ))}
                       {list.length === 0 && (
                         <tr><td colSpan={6} className="p-6 text-center text-muted-foreground italic">Belum ada indikator untuk kelasmu.</td></tr>
