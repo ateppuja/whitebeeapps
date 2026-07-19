@@ -21,6 +21,8 @@ import {
   UserCog,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import logoAsset from "@/assets/whitebee-logo.png.asset.json";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface NavItem {
