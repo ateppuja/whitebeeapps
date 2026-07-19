@@ -189,6 +189,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const ctx: StoreContextType = {
     ...state,
     user,
+    hydrated,
+
     login: (role, name) => setUser({ id: uid(), name, role }),
     logout: () => setUser(null),
     set: (key, value) => setState((s) => ({ ...s, [key]: value })),
