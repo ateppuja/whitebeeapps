@@ -93,6 +93,7 @@ interface StoreState {
   schedule: ScheduleItem[];
   students: Student[];
   indicators: Indicator[];
+  adabTitles: string[];
   observations: ObservationRecord[];
   announcements: Record<string, string>; // classId -> text
 }
