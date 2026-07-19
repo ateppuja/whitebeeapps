@@ -72,7 +72,7 @@ function StudentsPage() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow><TableHead>Nama</TableHead><TableHead>PIN</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow>
+              <TableRow><TableHead>Nama</TableHead><TableHead>Kode Siswa</TableHead><TableHead className="text-right">Aksi</TableHead></TableRow>
             </TableHeader>
             <TableBody>
               {pageData.map((s) => (
@@ -108,7 +108,7 @@ function StudentsPage() {
               Kelas: <span className="font-semibold text-primary">{className}</span>
             </div>
             <div><Label>Nama</Label><Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" /></div>
-            <div><Label>PIN</Label><Input value={pin} onChange={(e) => setPin(e.target.value)} className="mt-1.5" /></div>
+            <div><Label>Kode Siswa</Label><Input value={pin} onChange={(e) => setPin(e.target.value)} className="mt-1.5 font-mono" placeholder="Contoh: 1234" /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Batal</Button>

@@ -1,13 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useStore } from "@/lib/store";
-import { Users, School, BookOpen, ClipboardList } from "lucide-react";
+import { successToast } from "@/lib/swal";
+import { Users, School, BookOpen, ClipboardList, KeyRound } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
 function AdminDashboard() {
-  const { students, classes, subjects, indicators } = useStore();
+  const { students, classes, subjects, indicators, adminCode, set } = useStore();
+  const [codeInput, setCodeInput] = useState(adminCode);
+
   const perClass = classes.map((c) => ({
     ...c,
     count: students.filter((s) => s.classId === c.id).length,
@@ -62,16 +69,36 @@ function AdminDashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Alokasi Menu</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="text-muted-foreground">Kelola kategori LMS &amp; Observasi lewat menu di samping.</p>
-            <ul className="space-y-1.5 mt-2">
-              <li className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-primary" /> Kategori mata pelajaran (LMS)</li>
-              <li className="flex items-center gap-2"><ClipboardList className="h-4 w-4 text-primary" /> Kategori observasi karakter</li>
-              <li className="flex items-center gap-2"><School className="h-4 w-4 text-primary" /> Kelas &amp; pengelompokan siswa</li>
-            </ul>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5 text-primary" /> Kode Khusus Admin</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">Kode ini dipakai untuk login sebagai Admin di halaman masuk.</p>
+            <div>
+              <Label>Kode Admin</Label>
+              <Input value={codeInput} onChange={(e) => setCodeInput(e.target.value)} className="mt-1.5 font-mono" />
+            </div>
+            <Button
+              onClick={() => {
+                const v = codeInput.trim();
+                if (!v) return;
+                set("adminCode", v);
+                successToast("Kode admin diperbarui");
+              }}
+            >
+              Simpan Kode
+            </Button>
+            <div className="pt-2 text-xs text-muted-foreground border-t">
+              <p className="font-semibold text-foreground mb-1">Alokasi Menu</p>
+              <ul className="space-y-1">
+                <li className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5 text-primary" /> Kategori mata pelajaran (LMS)</li>
+                <li className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5 text-primary" /> Kategori observasi karakter</li>
+                <li className="flex items-center gap-2"><School className="h-3.5 w-3.5 text-primary" /> Kelas &amp; pengelompokan siswa</li>
+              </ul>
+            </div>
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

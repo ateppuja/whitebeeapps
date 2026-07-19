@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore, type Role } from "@/lib/store";
 import { swal, successToast } from "@/lib/swal";
 import { Button } from "@/components/ui/button";
@@ -17,43 +17,59 @@ const ROLES: { id: Role; label: string; desc: string; icon: typeof Shield }[] = 
 ];
 
 function LoginPage() {
-  const { user, login, teachers, students } = useStore();
+  const { user, login, teachers, students, classes, adminCode } = useStore();
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>("student");
   const [name, setName] = useState("");
-  const [pin, setPin] = useState("");
-  const [teacherId, setTeacherId] = useState<string>("");
-  const [studentId, setStudentId] = useState<string>("");
+  const [adminInput, setAdminInput] = useState("");
+  const [classId, setClassId] = useState<string>("");
+  const [code, setCode] = useState("");
 
   useEffect(() => {
     if (user) navigate({ to: `/${user.role}` });
   }, [user, navigate]);
 
   useEffect(() => {
-    if (role === "teacher" && !teacherId && teachers[0]) setTeacherId(teachers[0].id);
-    if (role === "student" && !studentId && students[0]) setStudentId(students[0].id);
-  }, [role, teachers, students, teacherId, studentId]);
+    if (!classId && classes[0]) setClassId(classes[0].id);
+  }, [classes, classId]);
+
+  const teacherHint = useMemo(() => {
+    const list = teachers.filter((t) => t.classIds.includes(classId));
+    return list.length ? `${list.length} guru terdaftar untuk kelas ini` : "Belum ada guru untuk kelas ini";
+  }, [teachers, classId]);
+  const studentHint = useMemo(() => {
+    const list = students.filter((s) => s.classId === classId);
+    return list.length ? `${list.length} siswa terdaftar untuk kelas ini` : "Belum ada siswa untuk kelas ini";
+  }, [students, classId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (role === "admin") {
+      if (adminInput.trim() !== adminCode) {
+        await swal.fire({ icon: "error", title: "Kode admin salah", text: `Demo kode: ${adminCode}` });
+        return;
+      }
       login("admin", name.trim() || "Admin Sekolah");
       successToast("Selamat datang, Admin!");
       navigate({ to: "/admin" });
       return;
     }
     if (role === "teacher") {
-      const t = teachers.find((x) => x.id === teacherId);
-      if (!t) { await swal.fire({ icon: "warning", title: "Pilih guru" }); return; }
+      if (!classId) { await swal.fire({ icon: "warning", title: "Pilih kelas" }); return; }
+      const t = teachers.find((x) => x.classIds.includes(classId) && x.code === code.trim());
+      if (!t) {
+        await swal.fire({ icon: "error", title: "Kode guru salah", text: "Kode tidak cocok dengan guru pada kelas ini." });
+        return;
+      }
       login("teacher", t.name, t.id);
       successToast(`Selamat datang, ${t.name}!`);
       navigate({ to: "/teacher" });
       return;
     }
-    const st = students.find((x) => x.id === studentId);
-    if (!st) { await swal.fire({ icon: "warning", title: "Pilih siswa" }); return; }
-    if (pin.trim() !== st.pin) {
-      await swal.fire({ icon: "error", title: "PIN salah", text: `Demo PIN: ${st.pin}` });
+    if (!classId) { await swal.fire({ icon: "warning", title: "Pilih kelas" }); return; }
+    const st = students.find((x) => x.classId === classId && x.pin === code.trim());
+    if (!st) {
+      await swal.fire({ icon: "error", title: "Kode siswa salah", text: "Kode tidak cocok dengan siswa pada kelas ini." });
       return;
     }
     login("student", st.name, st.id);
@@ -118,44 +134,59 @@ function LoginPage() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {role === "admin" && (
-              <div>
-                <Label htmlFor="name">Nama</Label>
-                <Input id="name" placeholder="Admin Sekolah" value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" />
-                <p className="text-xs text-muted-foreground mt-1">Demo: kata sandi tidak diverifikasi.</p>
-              </div>
-            )}
-            {role === "teacher" && (
-              <div>
-                <Label>Pilih Guru</Label>
-                <Select value={teacherId} onValueChange={setTeacherId}>
-                  <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih guru" /></SelectTrigger>
-                  <SelectContent>
-                    {teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">Kelas yang bisa dikelola diatur Admin.</p>
-              </div>
-            )}
-            {role === "student" && (
               <>
                 <div>
-                  <Label>Pilih Siswa</Label>
-                  <Select value={studentId} onValueChange={setStudentId}>
-                    <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih siswa" /></SelectTrigger>
-                    <SelectContent>
-                      {students.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="name">Nama Admin</Label>
+                  <Input id="name" placeholder="Admin Sekolah" value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" />
                 </div>
                 <div>
-                  <Label htmlFor="pin">PIN Siswa</Label>
-                  <Input id="pin" placeholder="Masukkan PIN" value={pin} onChange={(e) => setPin(e.target.value)} className="mt-1.5" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Demo PIN: {students.find((s) => s.id === studentId)?.pin ?? "-"}
-                  </p>
+                  <Label htmlFor="adminCode">Kode Khusus Admin</Label>
+                  <Input id="adminCode" type="password" placeholder="Masukkan kode admin" value={adminInput} onChange={(e) => setAdminInput(e.target.value)} className="mt-1.5 font-mono" />
+                  <p className="text-xs text-muted-foreground mt-1">Demo kode: <span className="font-mono">{adminCode}</span></p>
                 </div>
               </>
             )}
+
+            {role === "teacher" && (
+              <>
+                <div>
+                  <Label>Pilih Kelas</Label>
+                  <Select value={classId} onValueChange={setClassId}>
+                    <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih kelas" /></SelectTrigger>
+                    <SelectContent>
+                      {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">{teacherHint}</p>
+                </div>
+                <div>
+                  <Label htmlFor="tcode">Kode Khusus Guru</Label>
+                  <Input id="tcode" placeholder="Kode dari admin" value={code} onChange={(e) => setCode(e.target.value)} className="mt-1.5 font-mono" />
+                  <p className="text-xs text-muted-foreground mt-1">Kode dibuat oleh Admin di menu Guru & Penugasan Kelas.</p>
+                </div>
+              </>
+            )}
+
+            {role === "student" && (
+              <>
+                <div>
+                  <Label>Pilih Kelas</Label>
+                  <Select value={classId} onValueChange={setClassId}>
+                    <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih kelas" /></SelectTrigger>
+                    <SelectContent>
+                      {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">{studentHint}</p>
+                </div>
+                <div>
+                  <Label htmlFor="scode">Kode Siswa</Label>
+                  <Input id="scode" placeholder="Kode / PIN dari guru" value={code} onChange={(e) => setCode(e.target.value)} className="mt-1.5 font-mono" />
+                  <p className="text-xs text-muted-foreground mt-1">Kode dibuat guru di menu Manajemen Siswa.</p>
+                </div>
+              </>
+            )}
+
             <Button type="submit" className="w-full h-11 text-base font-semibold">
               Masuk sebagai {ROLES.find((r) => r.id === role)!.label}
             </Button>

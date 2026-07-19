@@ -18,22 +18,24 @@ function TeachersPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Teacher | null>(null);
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [classIds, setClassIds] = useState<string[]>([]);
 
-  const openNew = () => { setEditing(null); setName(""); setClassIds([]); setOpen(true); };
-  const openEdit = (t: Teacher) => { setEditing(t); setName(t.name); setClassIds(t.classIds); setOpen(true); };
+  const openNew = () => { setEditing(null); setName(""); setCode(""); setClassIds([]); setOpen(true); };
+  const openEdit = (t: Teacher) => { setEditing(t); setName(t.name); setCode(t.code); setClassIds(t.classIds); setOpen(true); };
 
   const toggle = (id: string) =>
     setClassIds((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   const save = () => {
-    if (!name.trim()) return;
-    const data: Teacher = { id: editing?.id ?? uid(), name: name.trim(), classIds };
+    if (!name.trim() || !code.trim()) return;
+    const data: Teacher = { id: editing?.id ?? uid(), name: name.trim(), code: code.trim(), classIds };
     if (editing) set("teachers", teachers.map((t) => (t.id === editing.id ? data : t)));
     else set("teachers", [...teachers, data]);
     successToast("Tersimpan");
     setOpen(false);
   };
+
 
   const remove = async (t: Teacher) => {
     if (await confirmDelete(t.name)) {
@@ -64,9 +66,13 @@ function TeachersPage() {
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold truncate">{t.name}</div>
                   <div className="text-xs text-muted-foreground mt-1">
+                    Kode: <span className="font-mono font-semibold text-primary">{t.code}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     Kelas: <span className="text-foreground">{classNames(t.classIds)}</span>
                   </div>
                 </div>
+
                 <div className="flex shrink-0">
                   <Button size="sm" variant="ghost" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => remove(t)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
@@ -89,7 +95,13 @@ function TeachersPage() {
               <Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" placeholder="Ustadz / Ustadzah ..." />
             </div>
             <div>
+              <Label>Kode Login Guru</Label>
+              <Input value={code} onChange={(e) => setCode(e.target.value)} className="mt-1.5 font-mono" placeholder="Contoh: GURU1" />
+              <p className="text-xs text-muted-foreground mt-1">Guru login dengan memilih kelas + memasukkan kode ini.</p>
+            </div>
+            <div>
               <Label>Kelas yang Ditangani</Label>
+
               <div className="mt-2 space-y-2 rounded-lg border p-3">
                 {classes.map((c) => (
                   <label key={c.id} className="flex items-center gap-2 cursor-pointer">

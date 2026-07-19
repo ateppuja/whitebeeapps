@@ -25,7 +25,9 @@ export interface Teacher {
   id: string;
   name: string;
   classIds: string[];
+  code: string;
 }
+
 
 export interface Material {
   id: string;
@@ -65,10 +67,12 @@ export type IndicatorCategory = "Adab" | "Tarbiyah";
 export interface Indicator {
   id: string;
   classId: string;
+  month: string; // YYYY-MM
   category: IndicatorCategory;
   text: string;
   title?: string; // Adab: judul (heading), text = sub judul
 }
+
 
 export type ObservationValue = "BB" | "MB" | "BSH" | "BSB";
 
@@ -96,7 +100,9 @@ interface StoreState {
   adabTitles: string[];
   observations: ObservationRecord[];
   announcements: Record<string, string>; // classId -> text
+  adminCode: string;
 }
+
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const today = new Date().toISOString().slice(0, 10);
@@ -116,9 +122,10 @@ const initialState: StoreState = {
     { id: S3, name: "Pendidikan Agama Islam" },
   ],
   teachers: [
-    { id: T1, name: "Ustadz Hasan", classIds: [C1, C2] },
-    { id: T2, name: "Ustadzah Aisyah", classIds: [C1] },
+    { id: T1, name: "Ustadz Hasan", classIds: [C1, C2], code: "GURU1" },
+    { id: T2, name: "Ustadzah Aisyah", classIds: [C1], code: "GURU2" },
   ],
+
   materials: [
     { id: uid(), classId: C1, subjectId: S1, title: "Pengenalan Pecahan", publishDate: today, videoLink: "https://youtube.com/watch?v=example", fileLink: "", instructions: "Kerjakan latihan halaman 42." },
     { id: uid(), classId: C1, subjectId: S3, title: "Adab Menuntut Ilmu", publishDate: today, instructions: "Baca dan ringkas dalam 5 poin." },
@@ -141,21 +148,26 @@ const initialState: StoreState = {
     { id: "st2", name: "Siti Nurhaliza", pin: "2345", classId: C1 },
     { id: "st3", name: "Bilal Rahman", pin: "3456", classId: C2 },
   ],
-  indicators: [
-    { id: uid(), classId: C1, category: "Adab", title: "Adab kepada Guru", text: "Mengucap salam saat bertemu guru" },
-    { id: uid(), classId: C1, category: "Adab", title: "Adab Berbicara", text: "Berbicara dengan sopan" },
-    { id: uid(), classId: C1, category: "Tarbiyah", text: "Shalat lima waktu tepat waktu" },
-    { id: uid(), classId: C1, category: "Tarbiyah", text: "Membaca Al-Qur'an setiap hari" },
-    { id: uid(), classId: C2, category: "Adab", title: "Adab kepada Orang Tua", text: "Menghormati orang tua" },
-    { id: uid(), classId: C2, category: "Tarbiyah", text: "Menghafal surah pendek" },
-  ],
+  indicators: (() => {
+    const m = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}`;
+    return [
+      { id: uid(), classId: C1, month: m, category: "Adab" as const, title: "Adab kepada Guru", text: "Mengucap salam saat bertemu guru" },
+      { id: uid(), classId: C1, month: m, category: "Adab" as const, title: "Adab Berbicara", text: "Berbicara dengan sopan" },
+      { id: uid(), classId: C1, month: m, category: "Tarbiyah" as const, text: "Shalat lima waktu tepat waktu" },
+      { id: uid(), classId: C1, month: m, category: "Tarbiyah" as const, text: "Membaca Al-Qur'an setiap hari" },
+      { id: uid(), classId: C2, month: m, category: "Adab" as const, title: "Adab kepada Orang Tua", text: "Menghormati orang tua" },
+      { id: uid(), classId: C2, month: m, category: "Tarbiyah" as const, text: "Menghafal surah pendek" },
+    ];
+  })(),
   adabTitles: ["Adab kepada Guru", "Adab kepada Orang Tua", "Adab Berbicara", "Adab Belajar", "Adab Makan & Minum"],
   observations: [],
   announcements: {
     [C1]: "Assalamu'alaikum Kelas 4A. Jangan lupa isi Matriks Observasi bulan ini.",
     [C2]: "Assalamu'alaikum Kelas 5B. Selamat belajar hari ini!",
   },
+  adminCode: "ADMIN123",
 };
+
 
 interface StoreContextType extends StoreState {
   user: User | null;
@@ -173,9 +185,9 @@ interface StoreContextType extends StoreState {
 
 const StoreContext = createContext<StoreContextType | null>(null);
 
-const STORAGE_KEY = "whitebee-lms-v2";
-const USER_KEY = "whitebee-lms-user-v2";
-const ACTIVE_CLASS_KEY = "whitebee-lms-active-class-v2";
+const STORAGE_KEY = "whitebee-lms-v3";
+const USER_KEY = "whitebee-lms-user-v3";
+const ACTIVE_CLASS_KEY = "whitebee-lms-active-class-v3";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StoreState>(initialState);
