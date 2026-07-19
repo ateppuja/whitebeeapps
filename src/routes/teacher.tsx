@@ -8,10 +8,11 @@ export const Route = createFileRoute("/teacher")({
 });
 
 function TeacherLayout() {
-  const { user } = useStore();
+  const { user, hydrated } = useStore();
   const navigate = useNavigate();
   useEffect(() => {
-    if (user === null) return;
+    if (!hydrated) return;
+    if (!user) { navigate({ to: "/" }); return; }
     if (user.role !== "teacher") navigate({ to: "/" });
   }, [user, navigate]);
   if (!user || user.role !== "teacher") return null;

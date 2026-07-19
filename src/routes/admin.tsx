@@ -8,10 +8,11 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminLayout() {
-  const { user } = useStore();
+  const { user, hydrated } = useStore();
   const navigate = useNavigate();
   useEffect(() => {
-    if (user === null) return;
+    if (!hydrated) return;
+    if (!user) { navigate({ to: "/" }); return; }
     if (user.role !== "admin") navigate({ to: "/" });
   }, [user, navigate]);
   if (!user || user.role !== "admin") return null;
