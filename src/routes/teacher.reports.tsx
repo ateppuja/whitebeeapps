@@ -5,8 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useStore, type IndicatorCategory } from "@/lib/store";
-import { successToast } from "@/lib/swal";
+import { successToast, swal } from "@/lib/swal";
 import { Download, FileText } from "lucide-react";
 import { NoClassSelected } from "@/components/NoClassSelected";
 
@@ -18,65 +20,163 @@ const MONTH_LABEL: Record<string,string> = {
   "07":"Juli","08":"Agustus","09":"September","10":"Oktober","11":"November","12":"Desember"
 };
 
+function labelMonth(m: string) {
+  const [y, mm] = m.split("-");
+  return `${MONTH_LABEL[mm] ?? mm} ${y}`;
+}
+
+function monthsInRange(from: string, to: string): string[] {
+  if (from > to) [from, to] = [to, from];
+  const [fy, fm] = from.split("-").map(Number);
+  const [ty, tm] = to.split("-").map(Number);
+  const out: string[] = [];
+  let y = fy, m = fm;
+  while (y < ty || (y === ty && m <= tm)) {
+    out.push(`${y}-${String(m).padStart(2,"0")}`);
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
+  return out;
+}
+
 function ReportsPage() {
   const { students, observations, indicators, classes, activeClassId } = useStore();
   const now = new Date();
-  const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`);
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+  const [fromMonth, setFromMonth] = useState(currentMonth);
+  const [toMonth, setToMonth] = useState(currentMonth);
+  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
 
-  const filled = useMemo(
-    () => new Set(observations.filter((o) => o.month === month).map((o) => o.studentId)),
-    [observations, month]
+  const classStudents = useMemo(
+    () => students.filter((s) => s.classId === activeClassId),
+    [students, activeClassId]
   );
+
+  const months = useMemo(() => monthsInRange(fromMonth, toMonth), [fromMonth, toMonth]);
+
+  const filled = useMemo(() => {
+    // students who filled at least one month in range
+    const set = new Set<string>();
+    observations.forEach((o) => {
+      if (months.includes(o.month)) set.add(o.studentId);
+    });
+    return set;
+  }, [observations, months]);
 
   if (!activeClassId) return <NoClassSelected />;
   const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
 
-  const classStudents = students.filter((s) => s.classId === activeClassId);
+  const toggleStudent = (id: string) => {
+    setSelectedStudents((p) => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+  const toggleAll = () => {
+    if (selectedStudents.size === classStudents.length) setSelectedStudents(new Set());
+    else setSelectedStudents(new Set(classStudents.map((s) => s.id)));
+  };
+
   const done = classStudents.filter((s) => filled.has(s.id)).length;
   const total = classStudents.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
 
-  const exportDoc = (cat: IndicatorCategory) => {
+  const exportDoc = async (cat: IndicatorCategory) => {
+    const targets = classStudents.filter((s) => selectedStudents.has(s.id));
+    if (targets.length === 0) {
+      await swal.fire({ icon: "warning", title: "Pilih minimal 1 siswa", timer: 1600, showConfirmButton: false });
+      return;
+    }
     const catIndicators = indicators.filter((i) => i.category === cat && i.classId === activeClassId);
-    const rows = classStudents.map((s) => {
-      const rec = observations.find((o) => o.studentId === s.id && o.month === month);
-      const entries = catIndicators.map((ind) => {
-        const e = rec?.entries.find((x) => x.indicatorId === ind.id);
-        return `<tr><td>${ind.text}</td><td>${e?.value ?? "-"}</td><td>${e?.note ?? ""}</td></tr>`;
-      }).join("");
-      return `<h3>${s.name}</h3><table border="1" cellspacing="0" cellpadding="4"><tr><th>Indikator</th><th>Nilai</th><th>Catatan</th></tr>${entries}</table><br/>`;
+    const rangeLabel = months.length === 1 ? labelMonth(months[0]) : `${labelMonth(months[0])} – ${labelMonth(months[months.length-1])}`;
+
+    const studentBlocks = targets.map((s) => {
+      const monthBlocks = months.map((mo) => {
+        const rec = observations.find((o) => o.studentId === s.id && o.month === mo);
+        const rows = catIndicators.map((ind) => {
+          const e = rec?.entries.find((x) => x.indicatorId === ind.id);
+          const label = cat === "Adab" && ind.title ? `<b>${ind.title}</b> — ${ind.text}` : ind.text;
+          return `<tr><td>${label}</td><td align="center">${e?.value ?? "-"}</td><td>${e?.note ?? ""}</td></tr>`;
+        }).join("");
+        return `<h4>${labelMonth(mo)}</h4><table border="1" cellspacing="0" cellpadding="4" width="100%"><tr><th>Indikator</th><th>Nilai</th><th>Catatan</th></tr>${rows}</table>`;
+      }).join("<br/>");
+      return `<h2>${s.name}</h2>${monthBlocks}<hr/>`;
     }).join("");
 
     const html = `<html><head><meta charset="utf-8"><title>Laporan ${cat} - ${className}</title></head><body>
       <h1>Laporan Observasi ${cat} — ${className}</h1>
-      <p>Bulan: ${month}</p>${rows}</body></html>`;
+      <p><b>Periode:</b> ${rangeLabel}<br/><b>Jumlah Siswa:</b> ${targets.length}</p>
+      ${studentBlocks}</body></html>`;
     const blob = new Blob(["\ufeff", html], { type: "application/msword" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `laporan-${cat.toLowerCase()}-${className.replace(/\s+/g,"_")}-${month}.doc`;
-    a.click(); URL.revokeObjectURL(url);
+    a.href = url;
+    a.download = `laporan-${cat.toLowerCase()}-${className.replace(/\s+/g,"_")}-${months[0]}_${months[months.length-1]}.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
     successToast(`Laporan ${cat} diunduh`);
   };
 
   const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
+  const monthOptions = years.flatMap((y) => MONTHS.map((m) => ({ v: `${y}-${m}`, label: `${MONTH_LABEL[m]} ${y}` })));
 
   return (
     <div>
       <PageHeader title="Progress & Laporan" description={`Monitor pengisian matriks observasi ${className}.`} />
 
       <Card className="mb-4">
-        <CardContent className="p-4 grid gap-3 sm:grid-cols-[220px_1fr_auto_auto]">
-          <Select value={month} onValueChange={setMonth}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {years.flatMap((y) => MONTHS.map((m) => (
-                <SelectItem key={`${y}-${m}`} value={`${y}-${m}`}>{MONTH_LABEL[m]} {y}</SelectItem>
-              )))}
-            </SelectContent>
-          </Select>
-          <div />
-          <Button variant="outline" onClick={() => exportDoc("Adab")}><Download className="h-4 w-4 mr-1" /> Export Adab (DOC)</Button>
-          <Button onClick={() => exportDoc("Tarbiyah")}><FileText className="h-4 w-4 mr-1" /> Export Tarbiyah (DOC)</Button>
+        <CardContent className="p-4 grid gap-3 md:grid-cols-2">
+          <div>
+            <Label className="text-xs">Dari bulan</Label>
+            <Select value={fromMonth} onValueChange={setFromMonth}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {monthOptions.map((o) => <SelectItem key={o.v} value={o.v}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Sampai bulan</Label>
+            <Select value={toMonth} onValueChange={setToMonth}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {monthOptions.map((o) => <SelectItem key={o.v} value={o.v}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="font-semibold">Pilih siswa untuk diekspor</div>
+              <div className="text-xs text-muted-foreground">{selectedStudents.size} dari {classStudents.length} siswa dipilih</div>
+            </div>
+            <Button size="sm" variant="outline" onClick={toggleAll}>
+              {selectedStudents.size === classStudents.length && classStudents.length > 0 ? "Kosongkan" : "Pilih Semua"}
+            </Button>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {classStudents.map((s) => (
+              <label key={s.id} className="flex items-center gap-2 rounded-lg border p-3 cursor-pointer hover:bg-accent/50">
+                <Checkbox checked={selectedStudents.has(s.id)} onCheckedChange={() => toggleStudent(s.id)} />
+                <span className="text-sm flex-1">{s.name}</span>
+                <span className={`text-[11px] font-semibold ${filled.has(s.id) ? "text-primary" : "text-muted-foreground"}`}>
+                  {filled.has(s.id) ? "Terisi" : "Kosong"}
+                </span>
+              </label>
+            ))}
+            {classStudents.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-6 sm:col-span-2">Belum ada siswa di kelas ini.</p>
+            )}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2 justify-end">
+            <Button variant="outline" onClick={() => exportDoc("Adab")}><Download className="h-4 w-4 mr-1" /> Export Adab (DOC)</Button>
+            <Button onClick={() => exportDoc("Tarbiyah")}><FileText className="h-4 w-4 mr-1" /> Export Tarbiyah (DOC)</Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -85,27 +185,13 @@ function ReportsPage() {
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="font-semibold">{className}</div>
-              <div className="text-xs text-muted-foreground">{done} dari {total} siswa mengisi</div>
+              <div className="text-xs text-muted-foreground">{done} dari {total} siswa mengisi di periode terpilih</div>
             </div>
             <div className="text-2xl font-bold text-primary">{pct}%</div>
           </div>
           <Progress value={pct} />
         </CardContent>
       </Card>
-
-      <div className="mt-4 grid gap-2">
-        {classStudents.map((s) => (
-          <div key={s.id} className="flex items-center justify-between rounded-lg border p-3 text-sm">
-            <span>{s.name}</span>
-            <span className={`text-xs font-semibold ${filled.has(s.id) ? "text-primary" : "text-muted-foreground"}`}>
-              {filled.has(s.id) ? "Sudah mengisi" : "Belum mengisi"}
-            </span>
-          </div>
-        ))}
-        {classStudents.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-6">Belum ada siswa di kelas ini.</p>
-        )}
-      </div>
     </div>
   );
 }
