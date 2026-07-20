@@ -11,15 +11,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useStore, type Material } from "@/lib/store";
 import { confirmDelete, successToast, swal } from "@/lib/swal";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2, Megaphone } from "lucide-react";
 import { NoClassSelected } from "@/components/NoClassSelected";
 
 export const Route = createFileRoute("/teacher/")({ component: MaterialsPage });
 
+const TEACHER_ANNOUNCEMENT_KEY = "__teachers__";
+
 const ADD_NEW = "__add_new__";
 
 function MaterialsPage() {
-  const { materials, subjects, set, uid, activeClassId, classes } = useStore();
+  const { materials, subjects, set, uid, activeClassId, classes, announcements } = useStore();
+  const adminAnnouncement = announcements[TEACHER_ANNOUNCEMENT_KEY]?.trim();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Material | null>(null);
   const [subjectId, setSubjectId] = useState("");
@@ -109,6 +112,18 @@ function MaterialsPage() {
         description={`Publikasikan materi untuk ${className}.`}
         actions={<Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Materi Baru</Button>}
       />
+
+      {adminAnnouncement && (
+        <Card className="mb-4 border-primary/30 bg-primary/5">
+          <CardContent className="p-4 flex gap-3">
+            <Megaphone className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <div className="text-sm font-semibold text-primary mb-1">Pengumuman dari Admin</div>
+              <div className="text-sm whitespace-pre-wrap">{adminAnnouncement}</div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="mb-4">
         <CardContent className="p-4 grid gap-3 sm:grid-cols-[1fr_220px]">
