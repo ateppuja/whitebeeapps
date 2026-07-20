@@ -106,6 +106,7 @@ const initialState: StoreState = {
   adabTitles: ["Adab kepada Guru", "Adab kepada Orang Tua", "Adab Berbicara", "Adab Belajar", "Adab Makan & Minum"],
   observations: [],
   attendance: [],
+  grades: [],
   announcements: {
     [C1]: "Assalamu'alaikum Kelas 4A. Jangan lupa isi Matriks Observasi bulan ini.",
     [C2]: "Assalamu'alaikum Kelas 5B. Selamat belajar hari ini!",
