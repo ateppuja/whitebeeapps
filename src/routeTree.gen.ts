@@ -22,6 +22,7 @@ import { Route as TeacherReportsRouteImport } from './routes/teacher.reports'
 import { Route as TeacherObservationRouteImport } from './routes/teacher.observation'
 import { Route as TeacherModulesRouteImport } from './routes/teacher.modules'
 import { Route as TeacherIndicatorsRouteImport } from './routes/teacher.indicators'
+import { Route as TeacherAttendanceRouteImport } from './routes/teacher.attendance'
 import { Route as TeacherAnnouncementsRouteImport } from './routes/teacher.announcements'
 import { Route as StudentTodayRouteImport } from './routes/student.today'
 import { Route as StudentScheduleRouteImport } from './routes/student.schedule'
@@ -97,6 +98,11 @@ const TeacherIndicatorsRoute = TeacherIndicatorsRouteImport.update({
   path: '/indicators',
   getParentRoute: () => TeacherRoute,
 } as any)
+const TeacherAttendanceRoute = TeacherAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => TeacherRoute,
+} as any)
 const TeacherAnnouncementsRoute = TeacherAnnouncementsRouteImport.update({
   id: '/announcements',
   path: '/announcements',
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/student/schedule': typeof StudentScheduleRoute
   '/student/today': typeof StudentTodayRoute
   '/teacher/announcements': typeof TeacherAnnouncementsRoute
+  '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/indicators': typeof TeacherIndicatorsRoute
   '/teacher/modules': typeof TeacherModulesRoute
   '/teacher/observation': typeof TeacherObservationRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/student/schedule': typeof StudentScheduleRoute
   '/student/today': typeof StudentTodayRoute
   '/teacher/announcements': typeof TeacherAnnouncementsRoute
+  '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/indicators': typeof TeacherIndicatorsRoute
   '/teacher/modules': typeof TeacherModulesRoute
   '/teacher/observation': typeof TeacherObservationRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/student/schedule': typeof StudentScheduleRoute
   '/student/today': typeof StudentTodayRoute
   '/teacher/announcements': typeof TeacherAnnouncementsRoute
+  '/teacher/attendance': typeof TeacherAttendanceRoute
   '/teacher/indicators': typeof TeacherIndicatorsRoute
   '/teacher/modules': typeof TeacherModulesRoute
   '/teacher/observation': typeof TeacherObservationRoute
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/student/schedule'
     | '/student/today'
     | '/teacher/announcements'
+    | '/teacher/attendance'
     | '/teacher/indicators'
     | '/teacher/modules'
     | '/teacher/observation'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/student/schedule'
     | '/student/today'
     | '/teacher/announcements'
+    | '/teacher/attendance'
     | '/teacher/indicators'
     | '/teacher/modules'
     | '/teacher/observation'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/student/schedule'
     | '/student/today'
     | '/teacher/announcements'
+    | '/teacher/attendance'
     | '/teacher/indicators'
     | '/teacher/modules'
     | '/teacher/observation'
@@ -385,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherIndicatorsRouteImport
       parentRoute: typeof TeacherRoute
     }
+    '/teacher/attendance': {
+      id: '/teacher/attendance'
+      path: '/attendance'
+      fullPath: '/teacher/attendance'
+      preLoaderRoute: typeof TeacherAttendanceRouteImport
+      parentRoute: typeof TeacherRoute
+    }
     '/teacher/announcements': {
       id: '/teacher/announcements'
       path: '/announcements'
@@ -490,6 +509,7 @@ const StudentRouteWithChildren =
 
 interface TeacherRouteChildren {
   TeacherAnnouncementsRoute: typeof TeacherAnnouncementsRoute
+  TeacherAttendanceRoute: typeof TeacherAttendanceRoute
   TeacherIndicatorsRoute: typeof TeacherIndicatorsRoute
   TeacherModulesRoute: typeof TeacherModulesRoute
   TeacherObservationRoute: typeof TeacherObservationRoute
@@ -501,6 +521,7 @@ interface TeacherRouteChildren {
 
 const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherAnnouncementsRoute: TeacherAnnouncementsRoute,
+  TeacherAttendanceRoute: TeacherAttendanceRoute,
   TeacherIndicatorsRoute: TeacherIndicatorsRoute,
   TeacherModulesRoute: TeacherModulesRoute,
   TeacherObservationRoute: TeacherObservationRoute,
