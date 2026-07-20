@@ -148,6 +148,7 @@ const toRow = {
   adab_titles: (t: string) => ({ title: t }),
   observations: (x: ObservationRecord) => ({ student_id: x.studentId, month: x.month, entries: x.entries }),
   attendance: (x: AttendanceRecord) => ({ student_id: x.studentId, date: x.date, status: x.status }),
+  grades: (x: Grade) => ({ id: x.id, class_id: x.classId, subject_id: x.subjectId, student_id: x.studentId, title: x.title, score: x.score }),
 };
 
 const fromRow = {
