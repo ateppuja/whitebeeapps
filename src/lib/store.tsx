@@ -245,6 +245,7 @@ async function syncKey<K extends keyof StoreState>(key: K, value: StoreState[K])
       case "indicators": return await replaceTable("indicators", "id", (value as Indicator[]).map(toRow.indicators));
       case "adabTitles": return await replaceTable("adab_titles", "title", (value as string[]).map(toRow.adab_titles));
       case "observations": return await replaceTable("observations", "student_id", (value as ObservationRecord[]).map(toRow.observations));
+      case "grades": return await replaceTable("grades", "id", (value as Grade[]).map(toRow.grades));
       case "announcements": {
         const rows = Object.entries(value as Record<string, string>).map(([class_id, text]) => ({ class_id, text }));
         return await replaceTable("announcements", "class_id", rows);
