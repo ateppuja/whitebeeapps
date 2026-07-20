@@ -19,6 +19,7 @@ import {
   LogOut,
   GraduationCap,
   UserCog,
+  FileSpreadsheet,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import logoAsset from "@/assets/whitebee-logo.png.asset.json";
@@ -35,6 +36,7 @@ const NAV: Record<Role, NavItem[]> = {
   admin: [
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { to: "/admin/classes", label: "Kelola Kelas", icon: School },
+    { to: "/admin/class-data", label: "Data Kelas & Export", icon: FileSpreadsheet },
     { to: "/admin/teachers", label: "Guru & Penugasan", icon: UserCog },
     { to: "/admin/announcements", label: "Pengumuman Guru", icon: Megaphone },
   ],
