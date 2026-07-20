@@ -168,7 +168,7 @@ async function replaceTable(table: string, pkCol: string, rows: any[]) {
 
 async function loadAll(): Promise<StoreState | null> {
   try {
-    const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se] = await Promise.all([
+    const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at] = await Promise.all([
       db.from("classes").select("*"),
       db.from("subjects").select("*"),
       db.from("teachers").select("*"),
@@ -181,6 +181,7 @@ async function loadAll(): Promise<StoreState | null> {
       db.from("observations").select("*"),
       db.from("announcements").select("*"),
       db.from("settings").select("*"),
+      db.from("attendance").select("*"),
     ]);
     const announcements: Record<string, string> = {};
     (an.data ?? []).forEach((r: any) => { announcements[r.class_id] = r.text; });
@@ -197,6 +198,7 @@ async function loadAll(): Promise<StoreState | null> {
       indicators: (ind.data ?? []).map(fromRow.indicators),
       adabTitles: (ad.data ?? []).map((r: any) => r.title),
       observations: (ob.data ?? []).map(fromRow.observations),
+      attendance: (at.data ?? []).map(fromRow.attendance),
       announcements,
       adminCode: settings.adminCode ?? initialState.adminCode,
     };
@@ -352,6 +354,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
       if (!skipSync.current) {
         void db.from("observations").upsert(toRow.observations(rec));
+      }
+    },
+    saveAttendance: (rec) => {
+      setState((s) => {
+        const rest = s.attendance.filter((a) => !(a.studentId === rec.studentId && a.date === rec.date));
+        return { ...s, attendance: [...rest, rec] };
+      });
+      if (!skipSync.current) {
+        void db.from("attendance").upsert(toRow.attendance(rec));
       }
     },
     uid,
