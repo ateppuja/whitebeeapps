@@ -77,8 +77,8 @@ function GradesPage() {
   };
 
   const remove = async (g: Grade) => {
-    const r = await confirmDelete("Hapus nilai ini?");
-    if (r.isConfirmed) {
+    const ok = await confirmDelete("nilai ini");
+    if (ok) {
       set("grades", grades.filter((x) => x.id !== g.id));
       successToast("Nilai dihapus");
     }
