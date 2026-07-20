@@ -86,7 +86,7 @@ function GradesPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <PageHeader title="Input Nilai Siswa" subtitle="Catat nilai per mapel, judul penilaian, dan angka nilai." />
+      <PageHeader title="Input Nilai Siswa" description="Catat nilai per mapel, judul penilaian, dan angka nilai." />
 
       <Card>
         <CardContent className="p-4 flex flex-wrap gap-3 items-end justify-between">
