@@ -44,6 +44,7 @@ interface StoreState {
   adabTitles: string[];
   observations: ObservationRecord[];
   attendance: AttendanceRecord[];
+  grades: Grade[];
   announcements: Record<string, string>;
   adminCode: string;
 }
