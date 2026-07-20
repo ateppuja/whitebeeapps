@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useStore } from "@/lib/store";
 import { successToast } from "@/lib/swal";
-import { Users, School, BookOpen, ClipboardList, KeyRound } from "lucide-react";
+import { Users, School, KeyRound } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
 function AdminDashboard() {
-  const { students, classes, subjects, indicators, adminCode, set } = useStore();
+  const { students, classes, adminCode, set } = useStore();
   const [codeInput, setCodeInput] = useState(adminCode);
 
   const perClass = classes.map((c) => ({
@@ -23,8 +23,6 @@ function AdminDashboard() {
   const stats = [
     { label: "Total Siswa", value: students.length, icon: Users, tone: "bg-primary/10 text-primary" },
     { label: "Total Kelas", value: classes.length, icon: School, tone: "bg-accent text-accent-foreground" },
-    { label: "Kategori Mapel", value: subjects.length, icon: BookOpen, tone: "bg-secondary text-secondary-foreground" },
-    { label: "Indikator Observasi", value: indicators.length, icon: ClipboardList, tone: "bg-primary/10 text-primary" },
   ];
 
   return (
@@ -91,8 +89,6 @@ function AdminDashboard() {
             <div className="pt-2 text-xs text-muted-foreground border-t">
               <p className="font-semibold text-foreground mb-1">Alokasi Menu</p>
               <ul className="space-y-1">
-                <li className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5 text-primary" /> Kategori mata pelajaran (LMS)</li>
-                <li className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5 text-primary" /> Kategori observasi karakter</li>
                 <li className="flex items-center gap-2"><School className="h-3.5 w-3.5 text-primary" /> Kelas &amp; pengelompokan siswa</li>
               </ul>
             </div>
