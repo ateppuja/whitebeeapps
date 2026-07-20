@@ -173,7 +173,7 @@ async function replaceTable(table: string, pkCol: string, rows: any[]) {
 
 async function loadAll(): Promise<StoreState | null> {
   try {
-    const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at] = await Promise.all([
+    const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at, gr] = await Promise.all([
       db.from("classes").select("*"),
       db.from("subjects").select("*"),
       db.from("teachers").select("*"),
@@ -187,6 +187,7 @@ async function loadAll(): Promise<StoreState | null> {
       db.from("announcements").select("*"),
       db.from("settings").select("*"),
       db.from("attendance").select("*"),
+      db.from("grades").select("*"),
     ]);
     const announcements: Record<string, string> = {};
     (an.data ?? []).forEach((r: any) => { announcements[r.class_id] = r.text; });
