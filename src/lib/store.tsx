@@ -28,6 +28,8 @@ export interface Indicator { id: string; classId: string; month: string; categor
 export type ObservationValue = "BB" | "MB" | "BSH" | "BSB";
 export interface ObservationEntry { indicatorId: string; value: ObservationValue; note: string; }
 export interface ObservationRecord { studentId: string; month: string; entries: ObservationEntry[]; }
+export type AttendanceStatus = "H" | "I" | "S" | "A";
+export interface AttendanceRecord { studentId: string; date: string; status: AttendanceStatus; }
 
 interface StoreState {
   classes: ClassRoom[];
@@ -40,6 +42,7 @@ interface StoreState {
   indicators: Indicator[];
   adabTitles: string[];
   observations: ObservationRecord[];
+  attendance: AttendanceRecord[];
   announcements: Record<string, string>;
   adminCode: string;
 }
@@ -100,6 +103,7 @@ const initialState: StoreState = {
   })(),
   adabTitles: ["Adab kepada Guru", "Adab kepada Orang Tua", "Adab Berbicara", "Adab Belajar", "Adab Makan & Minum"],
   observations: [],
+  attendance: [],
   announcements: {
     [C1]: "Assalamu'alaikum Kelas 4A. Jangan lupa isi Matriks Observasi bulan ini.",
     [C2]: "Assalamu'alaikum Kelas 5B. Selamat belajar hari ini!",
@@ -118,6 +122,7 @@ interface StoreContextType extends StoreState {
   set: <K extends keyof StoreState>(key: K, value: StoreState[K]) => void;
   update: (updater: (s: StoreState) => Partial<StoreState>) => void;
   saveObservation: (rec: ObservationRecord) => void;
+  saveAttendance: (rec: AttendanceRecord) => void;
   uid: () => string;
 }
 
@@ -139,6 +144,7 @@ const toRow = {
   indicators: (x: Indicator) => ({ id: x.id, class_id: x.classId, month: x.month, category: x.category, text: x.text, title: x.title ?? null }),
   adab_titles: (t: string) => ({ title: t }),
   observations: (x: ObservationRecord) => ({ student_id: x.studentId, month: x.month, entries: x.entries }),
+  attendance: (x: AttendanceRecord) => ({ student_id: x.studentId, date: x.date, status: x.status }),
 };
 
 const fromRow = {
@@ -151,6 +157,7 @@ const fromRow = {
   students: (r: any): Student => ({ id: r.id, name: r.name, pin: r.pin, classId: r.class_id, status: r.status }),
   indicators: (r: any): Indicator => ({ id: r.id, classId: r.class_id, month: r.month, category: r.category, text: r.text, title: r.title ?? undefined }),
   observations: (r: any): ObservationRecord => ({ studentId: r.student_id, month: r.month, entries: r.entries ?? [] }),
+  attendance: (r: any): AttendanceRecord => ({ studentId: r.student_id, date: r.date, status: r.status }),
 };
 
 // Delete-all then insert. Works regardless of PK.
