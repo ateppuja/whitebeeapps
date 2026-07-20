@@ -162,6 +162,7 @@ const fromRow = {
   indicators: (r: any): Indicator => ({ id: r.id, classId: r.class_id, month: r.month, category: r.category, text: r.text, title: r.title ?? undefined }),
   observations: (r: any): ObservationRecord => ({ studentId: r.student_id, month: r.month, entries: r.entries ?? [] }),
   attendance: (r: any): AttendanceRecord => ({ studentId: r.student_id, date: r.date, status: r.status }),
+  grades: (r: any): Grade => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, studentId: r.student_id, title: r.title, score: Number(r.score) }),
 };
 
 // Delete-all then insert. Works regardless of PK.
