@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useStore, type AttendanceStatus } from "@/lib/store";
 import { successToast } from "@/lib/swal";
 import { NoClassSelected } from "@/components/NoClassSelected";
-import { CalendarCheck, Save } from "lucide-react";
+import { CalendarCheck, Save, FileDown } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/teacher/attendance")({ component: AttendancePage });
 
