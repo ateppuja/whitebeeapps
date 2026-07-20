@@ -30,6 +30,7 @@ export interface ObservationEntry { indicatorId: string; value: ObservationValue
 export interface ObservationRecord { studentId: string; month: string; entries: ObservationEntry[]; }
 export type AttendanceStatus = "H" | "I" | "S" | "A";
 export interface AttendanceRecord { studentId: string; date: string; status: AttendanceStatus; }
+export interface Grade { id: string; classId: string; subjectId: string; studentId: string; title: string; score: number; }
 
 interface StoreState {
   classes: ClassRoom[];
