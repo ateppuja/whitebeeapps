@@ -205,6 +205,7 @@ async function loadAll(): Promise<StoreState | null> {
       adabTitles: (ad.data ?? []).map((r: any) => r.title),
       observations: (ob.data ?? []).map(fromRow.observations),
       attendance: (at.data ?? []).map(fromRow.attendance),
+      grades: (gr.data ?? []).map(fromRow.grades),
       announcements,
       adminCode: settings.adminCode ?? initialState.adminCode,
     };
