@@ -89,6 +89,36 @@ export type Database = {
         }
         Relationships: []
       }
+      grades: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          score: number
+          student_id: string
+          subject_id: string
+          title: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id: string
+          score: number
+          student_id: string
+          subject_id: string
+          title: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          score?: number
+          student_id?: string
+          subject_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       indicators: {
         Row: {
           category: string

@@ -30,6 +30,7 @@ export interface ObservationEntry { indicatorId: string; value: ObservationValue
 export interface ObservationRecord { studentId: string; month: string; entries: ObservationEntry[]; }
 export type AttendanceStatus = "H" | "I" | "S" | "A";
 export interface AttendanceRecord { studentId: string; date: string; status: AttendanceStatus; }
+export interface Grade { id: string; classId: string; subjectId: string; studentId: string; title: string; score: number; }
 
 interface StoreState {
   classes: ClassRoom[];
@@ -43,6 +44,7 @@ interface StoreState {
   adabTitles: string[];
   observations: ObservationRecord[];
   attendance: AttendanceRecord[];
+  grades: Grade[];
   announcements: Record<string, string>;
   adminCode: string;
 }
@@ -104,6 +106,7 @@ const initialState: StoreState = {
   adabTitles: ["Adab kepada Guru", "Adab kepada Orang Tua", "Adab Berbicara", "Adab Belajar", "Adab Makan & Minum"],
   observations: [],
   attendance: [],
+  grades: [],
   announcements: {
     [C1]: "Assalamu'alaikum Kelas 4A. Jangan lupa isi Matriks Observasi bulan ini.",
     [C2]: "Assalamu'alaikum Kelas 5B. Selamat belajar hari ini!",
@@ -145,6 +148,7 @@ const toRow = {
   adab_titles: (t: string) => ({ title: t }),
   observations: (x: ObservationRecord) => ({ student_id: x.studentId, month: x.month, entries: x.entries }),
   attendance: (x: AttendanceRecord) => ({ student_id: x.studentId, date: x.date, status: x.status }),
+  grades: (x: Grade) => ({ id: x.id, class_id: x.classId, subject_id: x.subjectId, student_id: x.studentId, title: x.title, score: x.score }),
 };
 
 const fromRow = {
@@ -158,6 +162,7 @@ const fromRow = {
   indicators: (r: any): Indicator => ({ id: r.id, classId: r.class_id, month: r.month, category: r.category, text: r.text, title: r.title ?? undefined }),
   observations: (r: any): ObservationRecord => ({ studentId: r.student_id, month: r.month, entries: r.entries ?? [] }),
   attendance: (r: any): AttendanceRecord => ({ studentId: r.student_id, date: r.date, status: r.status }),
+  grades: (r: any): Grade => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, studentId: r.student_id, title: r.title, score: Number(r.score) }),
 };
 
 // Delete-all then insert. Works regardless of PK.
@@ -168,7 +173,7 @@ async function replaceTable(table: string, pkCol: string, rows: any[]) {
 
 async function loadAll(): Promise<StoreState | null> {
   try {
-    const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at] = await Promise.all([
+    const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at, gr] = await Promise.all([
       db.from("classes").select("*"),
       db.from("subjects").select("*"),
       db.from("teachers").select("*"),
@@ -182,6 +187,7 @@ async function loadAll(): Promise<StoreState | null> {
       db.from("announcements").select("*"),
       db.from("settings").select("*"),
       db.from("attendance").select("*"),
+      db.from("grades").select("*"),
     ]);
     const announcements: Record<string, string> = {};
     (an.data ?? []).forEach((r: any) => { announcements[r.class_id] = r.text; });
@@ -199,6 +205,7 @@ async function loadAll(): Promise<StoreState | null> {
       adabTitles: (ad.data ?? []).map((r: any) => r.title),
       observations: (ob.data ?? []).map(fromRow.observations),
       attendance: (at.data ?? []).map(fromRow.attendance),
+      grades: (gr.data ?? []).map(fromRow.grades),
       announcements,
       adminCode: settings.adminCode ?? initialState.adminCode,
     };
@@ -238,6 +245,7 @@ async function syncKey<K extends keyof StoreState>(key: K, value: StoreState[K])
       case "indicators": return await replaceTable("indicators", "id", (value as Indicator[]).map(toRow.indicators));
       case "adabTitles": return await replaceTable("adab_titles", "title", (value as string[]).map(toRow.adab_titles));
       case "observations": return await replaceTable("observations", "student_id", (value as ObservationRecord[]).map(toRow.observations));
+      case "grades": return await replaceTable("grades", "id", (value as Grade[]).map(toRow.grades));
       case "announcements": {
         const rows = Object.entries(value as Record<string, string>).map(([class_id, text]) => ({ class_id, text }));
         return await replaceTable("announcements", "class_id", rows);
