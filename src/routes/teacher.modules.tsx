@@ -16,6 +16,18 @@ export const Route = createFileRoute("/teacher/modules")({ component: ModulesPag
 
 function ModulesPage() {
   const { modules, subjects, set, uid, activeClassId, classes } = useStore();
+  const [newCatMode, setNewCatMode] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const addNewCategory = () => {
+    const name = newCatName.trim();
+    if (!name) return;
+    const newId = uid();
+    set("subjects", [...subjects, { id: newId, name }]);
+    setSubjectId(newId);
+    setNewCatMode(false);
+    setNewCatName("");
+    successToast("Kategori ditambahkan");
+  };
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Module | null>(null);
   const [subjectId, setSubjectId] = useState("");
