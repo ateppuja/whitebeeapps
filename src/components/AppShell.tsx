@@ -19,6 +19,7 @@ import {
   LogOut,
   GraduationCap,
   UserCog,
+  FileSpreadsheet,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import logoAsset from "@/assets/whitebee-logo.png.asset.json";
