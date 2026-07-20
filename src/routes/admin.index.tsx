@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useStore } from "@/lib/store";
 import { successToast } from "@/lib/swal";
-import { Users, School, BookOpen, ClipboardList, KeyRound } from "lucide-react";
+import { Users, School, KeyRound } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
 function AdminDashboard() {
-  const { students, classes, subjects, indicators, adminCode, set } = useStore();
+  const { students, classes, adminCode, set } = useStore();
   const [codeInput, setCodeInput] = useState(adminCode);
 
   const perClass = classes.map((c) => ({
@@ -23,8 +23,6 @@ function AdminDashboard() {
   const stats = [
     { label: "Total Siswa", value: students.length, icon: Users, tone: "bg-primary/10 text-primary" },
     { label: "Total Kelas", value: classes.length, icon: School, tone: "bg-accent text-accent-foreground" },
-    { label: "Kategori Mapel", value: subjects.length, icon: BookOpen, tone: "bg-secondary text-secondary-foreground" },
-    { label: "Indikator Observasi", value: indicators.length, icon: ClipboardList, tone: "bg-primary/10 text-primary" },
   ];
 
   return (
