@@ -284,9 +284,22 @@ function AttendancePage() {
             </Table>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const next: Record<string, AttendanceStatus> = {};
+                classStudents.forEach((s) => { next[s.id] = "H"; });
+                setPending(next);
+                successToast("Semua siswa ditandai Hadir");
+              }}
+            >
+              <CalendarCheck className="h-4 w-4 mr-1" /> Tandai Hadir Semua
+            </Button>
             <Button onClick={saveAll}><Save className="h-4 w-4 mr-1" /> Simpan Presensi</Button>
           </div>
+
         </CardContent>
       </Card>
 
