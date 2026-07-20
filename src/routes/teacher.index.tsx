@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useStore, type Material } from "@/lib/store";
 import { confirmDelete, successToast, swal } from "@/lib/swal";
-import { Pencil, Plus, Search, Trash2, Megaphone } from "lucide-react";
+import { Pencil, Plus, Search, Trash2, Megaphone, FileDown } from "lucide-react";
 import { NoClassSelected } from "@/components/NoClassSelected";
+import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/teacher/")({ component: MaterialsPage });
 
@@ -103,6 +104,40 @@ function MaterialsPage() {
 
   const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? "-";
 
+  const exportExcel = () => {
+    if (classMaterials.length === 0) {
+      swal.fire({ icon: "info", title: "Tidak ada materi", text: "Belum ada materi untuk diexport." });
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+    const targetSubjects = filterSubject === "all"
+      ? subjects.filter((s) => classMaterials.some((m) => m.subjectId === s.id))
+      : subjects.filter((s) => s.id === filterSubject);
+    targetSubjects.forEach((s) => {
+      const rows = classMaterials
+        .filter((m) => m.subjectId === s.id)
+        .map((m) => ({
+          Judul: m.title,
+          "Tanggal Publish": m.publishDate,
+          "Link Video": m.videoLink ?? "",
+          "Link File": m.fileLink ?? "",
+          Instruksi: m.instructions ?? "",
+        }));
+      if (rows.length === 0) return;
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws["!cols"] = [{ wch: 32 }, { wch: 14 }, { wch: 30 }, { wch: 30 }, { wch: 40 }];
+      const sheetName = s.name.replace(/[\\/?*[\]:]/g, "").slice(0, 31) || "Sheet";
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    });
+    if (wb.SheetNames.length === 0) {
+      swal.fire({ icon: "info", title: "Tidak ada materi", text: "Kategori yang dipilih belum memiliki materi." });
+      return;
+    }
+    const safeClass = className.replace(/\s+/g, "_");
+    XLSX.writeFile(wb, `Materi_${safeClass}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    successToast("Excel berhasil diexport");
+  };
+
   if (!activeClassId) return <NoClassSelected />;
 
   return (
@@ -110,7 +145,12 @@ function MaterialsPage() {
       <PageHeader
         title="Kelola Materi"
         description={`Publikasikan materi untuk ${className}.`}
-        actions={<Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Materi Baru</Button>}
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportExcel}><FileDown className="h-4 w-4 mr-1" /> Export Excel</Button>
+            <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> Materi Baru</Button>
+          </div>
+        }
       />
 
       {adminAnnouncement && (
