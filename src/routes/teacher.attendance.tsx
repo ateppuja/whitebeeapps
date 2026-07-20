@@ -31,6 +31,12 @@ function AttendancePage() {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [month, setMonth] = useState(monthNow());
   const [pending, setPending] = useState<Record<string, AttendanceStatus>>({});
+  const [rangeStart, setRangeStart] = useState(() => {
+    const d = new Date(); d.setMonth(d.getMonth() - 4);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [rangeEnd, setRangeEnd] = useState(monthNow());
+  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
 
   const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
   const classStudents = useMemo(
