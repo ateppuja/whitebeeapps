@@ -89,8 +89,6 @@ function AdminDashboard() {
             <div className="pt-2 text-xs text-muted-foreground border-t">
               <p className="font-semibold text-foreground mb-1">Alokasi Menu</p>
               <ul className="space-y-1">
-                <li className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5 text-primary" /> Kategori mata pelajaran (LMS)</li>
-                <li className="flex items-center gap-2"><ClipboardList className="h-3.5 w-3.5 text-primary" /> Kategori observasi karakter</li>
                 <li className="flex items-center gap-2"><School className="h-3.5 w-3.5 text-primary" /> Kelas &amp; pengelompokan siswa</li>
               </ul>
             </div>
