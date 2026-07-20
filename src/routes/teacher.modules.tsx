@@ -105,10 +105,29 @@ function ModulesPage() {
             </div>
             <div>
               <Label>Kategori</Label>
-              <Select value={subjectId} onValueChange={setSubjectId}>
-                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
-                <SelectContent>{subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-              </Select>
+              {newCatMode ? (
+                <div className="mt-1.5 flex gap-2">
+                  <Input
+                    autoFocus
+                    placeholder="Nama kategori baru"
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addNewCategory())}
+                  />
+                  <Button type="button" onClick={addNewCategory}>Tambah</Button>
+                  <Button type="button" variant="outline" onClick={() => setNewCatMode(false)}>Batal</Button>
+                </div>
+              ) : (
+                <div className="mt-1.5 flex gap-2">
+                  <Select value={subjectId} onValueChange={setSubjectId}>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
+                    <SelectContent>{subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" onClick={() => { setNewCatMode(true); setNewCatName(""); }}>
+                    <Plus className="h-4 w-4 mr-1" /> Kategori
+                  </Button>
+                </div>
+              )}
             </div>
             <div><Label>Judul</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1.5" /></div>
             <div><Label>Link File</Label><Input value={fileLink} onChange={(e) => setFileLink(e.target.value)} className="mt-1.5" placeholder="https://..." /></div>
