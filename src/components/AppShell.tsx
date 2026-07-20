@@ -36,7 +36,7 @@ const NAV: Record<Role, NavItem[]> = {
     { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { to: "/admin/classes", label: "Kelola Kelas", icon: School },
     { to: "/admin/teachers", label: "Guru & Penugasan", icon: UserCog },
-    
+    { to: "/admin/announcements", label: "Pengumuman Guru", icon: Megaphone },
   ],
 
   teacher: [
