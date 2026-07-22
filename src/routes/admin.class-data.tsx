@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useStore } from "@/lib/store";
-import { successToast, errorAlert } from "@/lib/swal";
+import { successToast, swal } from "@/lib/swal";
 import { FileSpreadsheet, School, Cloud, Loader2 } from "lucide-react";
 import { exportToGoogleSheets, type SheetPayload } from "@/lib/googleSheets.functions";
 import { supabase } from "@/integrations/supabase/client";
