@@ -84,6 +84,28 @@ function GradesPage() {
       successToast("Nilai dihapus");
     }
   };
+  const exportExcel = () => {
+    const cls = classes.find((c) => c.id === activeClassId);
+    const rows = filtered.map((g) => {
+      const st = students.find((s) => s.id === g.studentId);
+      const sub = subjects.find((s) => s.id === g.subjectId);
+      return {
+        Mapel: sub?.name ?? "-",
+        Siswa: st?.name ?? "-",
+        "Judul Nilai": g.title,
+        Nilai: g.score,
+      };
+    });
+    if (rows.length === 0) {
+      swal.fire({ icon: "info", title: "Tidak ada data", text: "Belum ada nilai untuk diexport." });
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Nilai");
+    const fname = `Nilai_${(cls?.name ?? "Kelas").replace(/\s+/g, "_")}${filterSubject !== "all" ? "_" + (subjects.find((s) => s.id === filterSubject)?.name.replace(/\s+/g, "_") ?? "") : ""}.xlsx`;
+    XLSX.writeFile(wb, fname);
+    successToast("Export Excel berhasil");
+  };
 
   return (
     <div className="p-6 space-y-6">
