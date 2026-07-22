@@ -125,7 +125,10 @@ function GradesPage() {
               </Select>
             </div>
           </div>
-          <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" /> Tambah Nilai</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportExcel}><FileSpreadsheet className="w-4 h-4 mr-2" /> Export Excel</Button>
+            <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" /> Tambah Nilai</Button>
+          </div>
         </CardContent>
       </Card>
 
