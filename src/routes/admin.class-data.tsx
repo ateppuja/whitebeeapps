@@ -21,6 +21,118 @@ function ClassDataPage() {
     schedule, indicators, observations, attendance, announcements,
   } = useStore();
   const [selectedId, setSelectedId] = useState<string>(classes[0]?.id ?? "");
+  const [syncing, setSyncing] = useState(false);
+  const [lastUrl, setLastUrl] = useState<string>("");
+
+  const buildSheets = (): SheetPayload[] => {
+    if (!cls || !data) return [];
+    const subjName = (id: string) => subjects.find((s) => s.id === id)?.name ?? id;
+    const studName = (id: string) => students.find((s) => s.id === id)?.name ?? id;
+
+    const sheets: SheetPayload[] = [];
+    sheets.push({
+      title: "Ringkasan",
+      rows: [
+        ["Ringkasan Kelas"],
+        ["Nama Kelas", cls.name],
+        ["Jenjang", cls.grade],
+        ["Jumlah Siswa", data.students.length],
+        ["Jumlah Materi", data.materials.length],
+        ["Jumlah Modul", data.modules.length],
+        ["Jumlah Guru", data.teachers.length],
+        ["Pengumuman", data.announcement],
+        ["Diperbarui", new Date().toLocaleString("id-ID")],
+      ],
+    });
+    sheets.push({
+      title: "Guru",
+      rows: [["Nama", "Kode Guru"], ...data.teachers.map((t) => [t.name, t.code])],
+    });
+    sheets.push({
+      title: "Siswa",
+      rows: [["No", "Nama", "Kode Siswa", "Status Kelas"], ...data.students.map((s, i) => [i + 1, s.name, s.pin, s.status])],
+    });
+    sheets.push({
+      title: "Materi",
+      rows: [
+        ["Mata Pelajaran", "Judul", "Tanggal Terbit", "Link Video", "Link File", "Instruksi"],
+        ...data.materials.map((m) => [subjName(m.subjectId), m.title, m.publishDate, m.videoLink ?? "", m.fileLink ?? "", m.instructions ?? ""]),
+      ],
+    });
+    sheets.push({
+      title: "Modul",
+      rows: [["Mata Pelajaran", "Judul", "Link File"], ...data.modules.map((m) => [subjName(m.subjectId), m.title, m.fileLink])],
+    });
+    sheets.push({
+      title: "Jadwal",
+      rows: [["Hari", "Mata Pelajaran"], ...data.schedule.map((s) => [s.day, s.subject])],
+    });
+    sheets.push({
+      title: "Indikator",
+      rows: [["Bulan", "Kategori", "Judul", "Indikator"], ...data.indicators.map((i) => [i.month, i.category, i.title ?? "", i.text])],
+    });
+
+    const attMap: Record<string, Record<string, { H: number; I: number; S: number; A: number }>> = {};
+    data.attendance.forEach((a) => {
+      const m = a.date.slice(0, 7);
+      attMap[a.studentId] ??= {};
+      attMap[a.studentId][m] ??= { H: 0, I: 0, S: 0, A: 0 };
+      attMap[a.studentId][m][a.status]++;
+    });
+    const attRows: (string | number)[][] = [["Siswa", "Bulan", "Hadir", "Izin", "Sakit", "Alfa", "Total"]];
+    data.students.forEach((s) => {
+      const months = attMap[s.id] ?? {};
+      Object.keys(months).sort().forEach((m) => {
+        const v = months[m];
+        attRows.push([s.name, m, v.H, v.I, v.S, v.A, v.H + v.I + v.S + v.A]);
+      });
+    });
+    sheets.push({ title: "Presensi", rows: attRows });
+
+    const obsRows: (string | number)[][] = [["Siswa", "Bulan", "Kategori", "Judul", "Indikator", "Nilai", "Catatan"]];
+    data.observations.forEach((o) => {
+      o.entries.forEach((e) => {
+        const ind = indicators.find((i) => i.id === e.indicatorId);
+        obsRows.push([studName(o.studentId), o.month, ind?.category ?? "", ind?.title ?? "", ind?.text ?? "", e.value, e.note]);
+      });
+    });
+    sheets.push({ title: "Observasi", rows: obsRows });
+
+    return sheets;
+  };
+
+  const exportSheets = async () => {
+    if (!cls || !data) return;
+    setSyncing(true);
+    try {
+      const settingsKey = `gsheet:${cls.id}`;
+      const { data: existing } = await (supabase as unknown as {
+        from: (t: string) => { select: (s: string) => { eq: (c: string, v: string) => { maybeSingle: () => Promise<{ data: { value: string } | null }> } } };
+      }).from("settings").select("value").eq("key", settingsKey).maybeSingle();
+      const spreadsheetId = existing?.value || undefined;
+      const res = await exportToGoogleSheets({
+        data: {
+          spreadsheetTitle: `WhiteBee LMS · ${cls.name}`,
+          spreadsheetId,
+          sheets: buildSheets(),
+        },
+      });
+      if (res.spreadsheetId && res.spreadsheetId !== spreadsheetId) {
+        await (supabase as unknown as { from: (t: string) => { upsert: (v: unknown) => Promise<unknown> } })
+          .from("settings").upsert({ key: settingsKey, value: res.spreadsheetId });
+      }
+      setLastUrl(res.spreadsheetUrl);
+      await swal.fire({
+        icon: "success",
+        title: "Google Sheets terupdate",
+        html: `<a href="${res.spreadsheetUrl}" target="_blank" rel="noreferrer" style="color:#0b7c3f;text-decoration:underline">Buka Spreadsheet</a>`,
+      });
+    } catch (e) {
+      await swal.fire({ icon: "error", title: "Gagal export", text: (e as Error).message });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const cls = classes.find((c) => c.id === selectedId);
 
