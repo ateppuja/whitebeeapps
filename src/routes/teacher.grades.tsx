@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 import { PageHeader } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,13 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useStore, type Grade } from "@/lib/store";
 import { confirmDelete, successToast, swal } from "@/lib/swal";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { FileSpreadsheet, Pencil, Plus, Trash2 } from "lucide-react";
 import { NoClassSelected } from "@/components/NoClassSelected";
 
 export const Route = createFileRoute("/teacher/grades")({ component: GradesPage });
 
 function GradesPage() {
-  const { grades, students, subjects, set, uid, activeClassId } = useStore();
+  const { grades, students, subjects, classes, set, uid, activeClassId } = useStore();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Grade | null>(null);
   const [subjectId, setSubjectId] = useState("");
@@ -83,6 +84,28 @@ function GradesPage() {
       successToast("Nilai dihapus");
     }
   };
+  const exportExcel = () => {
+    const cls = classes.find((c) => c.id === activeClassId);
+    const rows = filtered.map((g) => {
+      const st = students.find((s) => s.id === g.studentId);
+      const sub = subjects.find((s) => s.id === g.subjectId);
+      return {
+        Mapel: sub?.name ?? "-",
+        Siswa: st?.name ?? "-",
+        "Judul Nilai": g.title,
+        Nilai: g.score,
+      };
+    });
+    if (rows.length === 0) {
+      swal.fire({ icon: "info", title: "Tidak ada data", text: "Belum ada nilai untuk diexport." });
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Nilai");
+    const fname = `Nilai_${(cls?.name ?? "Kelas").replace(/\s+/g, "_")}${filterSubject !== "all" ? "_" + (subjects.find((s) => s.id === filterSubject)?.name.replace(/\s+/g, "_") ?? "") : ""}.xlsx`;
+    XLSX.writeFile(wb, fname);
+    successToast("Export Excel berhasil");
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -102,7 +125,10 @@ function GradesPage() {
               </Select>
             </div>
           </div>
-          <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" /> Tambah Nilai</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportExcel}><FileSpreadsheet className="w-4 h-4 mr-2" /> Export Excel</Button>
+            <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" /> Tambah Nilai</Button>
+          </div>
         </CardContent>
       </Card>
 
