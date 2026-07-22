@@ -283,10 +283,21 @@ function ClassDataPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={exportExcel} disabled={!selectedId}>
-              <FileSpreadsheet className="h-4 w-4 mr-1" /> Export Excel
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={exportExcel} disabled={!selectedId} variant="outline">
+                <FileSpreadsheet className="h-4 w-4 mr-1" /> Export Excel
+              </Button>
+              <Button onClick={exportSheets} disabled={!selectedId || syncing}>
+                {syncing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Cloud className="h-4 w-4 mr-1" />}
+                Export ke Google Sheets
+              </Button>
+            </div>
           </div>
+          {lastUrl && (
+            <div className="text-sm text-muted-foreground">
+              Spreadsheet terakhir: <a href={lastUrl} target="_blank" rel="noreferrer" className="text-primary underline">Buka di Google Sheets</a>
+            </div>
+          )}
         </CardContent>
       </Card>
 
