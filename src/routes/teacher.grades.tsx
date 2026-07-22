@@ -18,7 +18,7 @@ import { NoClassSelected } from "@/components/NoClassSelected";
 export const Route = createFileRoute("/teacher/grades")({ component: GradesPage });
 
 function GradesPage() {
-  const { grades, students, subjects, set, uid, activeClassId } = useStore();
+  const { grades, students, subjects, classes, set, uid, activeClassId } = useStore();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Grade | null>(null);
   const [subjectId, setSubjectId] = useState("");
