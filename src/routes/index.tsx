@@ -122,7 +122,7 @@ function LoginPage() {
             </div>
 
             <h2 className="mt-12 text-3xl font-bold leading-tight">
-              Belajar sepenuh hati, <br /> tumbuh berkarakter.
+              Islami Alami <br /> Membumi.
             </h2>
             <p className="mt-3 text-sm opacity-80 max-w-xs">
               Platform pembelajaran modern yang memadukan LMS dengan observasi Adab &amp; Tarbiyah untuk pertumbuhan siswa yang utuh.
