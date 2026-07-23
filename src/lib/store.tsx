@@ -124,7 +124,7 @@ interface StoreContextType extends StoreState {
   logout: () => void;
   set: <K extends keyof StoreState>(key: K, value: StoreState[K]) => void;
   update: (updater: (s: StoreState) => Partial<StoreState>) => void;
-  saveObservation: (rec: ObservationRecord) => void;
+  saveObservation: (rec: ObservationRecord) => Promise<boolean>;
   saveAttendance: (rec: AttendanceRecord) => void;
   refresh: () => Promise<void>;
   uid: () => string;
@@ -383,14 +383,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    saveObservation: (rec) => {
+    saveObservation: async (rec) => {
+      const previous = state.observations;
       setState((s) => {
         const rest = s.observations.filter((o) => !(o.studentId === rec.studentId && o.month === rec.month));
         return { ...s, observations: [...rest, rec] };
       });
-      if (!skipSync.current) {
-        void db.from("observations").upsert(toRow.observations(rec));
+      const { error } = await db
+        .from("observations")
+        .upsert(toRow.observations(rec), { onConflict: "student_id,month" });
+      if (error) {
+        console.error("[cloud] save observation failed", error);
+        setState((s) => ({ ...s, observations: previous }));
+        return false;
       }
+      const loaded = await loadAll();
+      if (loaded) {
+        skipSync.current = true;
+        setState(loaded);
+        setTimeout(() => { skipSync.current = false; }, 0);
+      }
+      return true;
     },
     saveAttendance: (rec) => {
       setState((s) => {
