@@ -51,7 +51,7 @@ function ModulesPage() {
     const name = newFolderName.trim();
     if (!name || !activeClassId) return;
     const newId = uid();
-    set("subjects", [...subjects, { id: newId, name }]);
+    set("subjects", [...subjects, { id: newId, name, classId: activeClassId }]);
     const next = [...folderIds, newId];
     setFolderIds(next);
     saveFolderIds(activeClassId, next);

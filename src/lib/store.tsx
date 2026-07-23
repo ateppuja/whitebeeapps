@@ -12,7 +12,7 @@ export interface User {
 }
 
 export interface ClassRoom { id: string; name: string; grade: string; }
-export interface Subject { id: string; name: string; }
+export interface Subject { id: string; name: string; classId?: string; }
 export interface Teacher { id: string; name: string; classIds: string[]; code: string; }
 
 export interface Material {
@@ -140,7 +140,7 @@ const db: any = supabase;
 
 const toRow = {
   classes: (x: ClassRoom) => ({ id: x.id, name: x.name, grade: x.grade }),
-  subjects: (x: Subject) => ({ id: x.id, name: x.name }),
+  subjects: (x: Subject) => ({ id: x.id, name: x.name, class_id: x.classId ?? null }),
   teachers: (x: Teacher) => ({ id: x.id, name: x.name, code: x.code, class_ids: x.classIds }),
   materials: (x: Material) => ({ id: x.id, class_id: x.classId, subject_id: x.subjectId, title: x.title, publish_date: x.publishDate, video_link: x.videoLink ?? null, file_link: x.fileLink ?? null, instructions: x.instructions ?? null }),
   modules: (x: Module) => ({ id: x.id, class_id: x.classId, subject_id: x.subjectId, title: x.title, file_link: x.fileLink }),
@@ -155,7 +155,7 @@ const toRow = {
 
 const fromRow = {
   classes: (r: any): ClassRoom => ({ id: r.id, name: r.name, grade: r.grade }),
-  subjects: (r: any): Subject => ({ id: r.id, name: r.name }),
+  subjects: (r: any): Subject => ({ id: r.id, name: r.name, classId: r.class_id ?? undefined }),
   teachers: (r: any): Teacher => ({ id: r.id, name: r.name, code: r.code, classIds: r.class_ids ?? [] }),
   materials: (r: any): Material => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, title: r.title, publishDate: r.publish_date, videoLink: r.video_link ?? undefined, fileLink: r.file_link ?? undefined, instructions: r.instructions ?? undefined }),
   modules: (r: any): Module => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, title: r.title, fileLink: r.file_link }),

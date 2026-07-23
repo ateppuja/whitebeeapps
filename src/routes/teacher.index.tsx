@@ -36,6 +36,10 @@ function MaterialsPage() {
   const [q, setQ] = useState("");
   const [filterSubject, setFilterSubject] = useState<string>("all");
 
+  const mySubjects = useMemo(
+    () => subjects.filter((s) => !s.classId || s.classId === activeClassId),
+    [subjects, activeClassId]
+  );
   const classMaterials = useMemo(
     () => materials.filter((m) => m.classId === activeClassId),
     [materials, activeClassId]
@@ -64,7 +68,7 @@ function MaterialsPage() {
 
   const openNew = () => {
     setEditing(null);
-    setSubjectId(subjects[0]?.id ?? "");
+    setSubjectId(mySubjects[0]?.id ?? "");
     setTitle(""); setPublishDate(new Date().toISOString().slice(0, 10));
     setVideoLink(""); setFileLink(""); setInstructions("");
     setOpen(true);
@@ -88,9 +92,9 @@ function MaterialsPage() {
 
   const addNewCategory = () => {
     const name = newCatName.trim();
-    if (!name) return;
+    if (!name || !activeClassId) return;
     const newId = uid();
-    set("subjects", [...subjects, { id: newId, name }]);
+    set("subjects", [...subjects, { id: newId, name, classId: activeClassId }]);
     setSubjectId(newId);
     setNewCatMode(false);
     setNewCatName("");
@@ -122,8 +126,8 @@ function MaterialsPage() {
     }
     const wb = XLSX.utils.book_new();
     const targetSubjects = filterSubject === "all"
-      ? subjects.filter((s) => classMaterials.some((m) => m.subjectId === s.id))
-      : subjects.filter((s) => s.id === filterSubject);
+      ? mySubjects.filter((s) => classMaterials.some((m) => m.subjectId === s.id))
+      : mySubjects.filter((s) => s.id === filterSubject);
     targetSubjects.forEach((s) => {
       const rows = classMaterials
         .filter((m) => m.subjectId === s.id)
@@ -201,7 +205,7 @@ function MaterialsPage() {
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Kategori</SelectItem>
-              {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+              {mySubjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </CardContent>
@@ -264,7 +268,7 @@ function MaterialsPage() {
                   <Select value={subjectId} onValueChange={setSubjectId}>
                     <SelectTrigger className="flex-1"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
                     <SelectContent>
-                      {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                      {mySubjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <Button type="button" variant="outline" onClick={() => { setNewCatMode(true); setNewCatName(""); }}>

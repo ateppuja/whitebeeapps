@@ -27,6 +27,10 @@ function GradesPage() {
   const [score, setScore] = useState<string>("");
   const [filterSubject, setFilterSubject] = useState<string>("all");
 
+  const mySubjects = useMemo(
+    () => subjects.filter((s) => !s.classId || s.classId === activeClassId),
+    [subjects, activeClassId]
+  );
   const classStudents = useMemo(
     () => students.filter((s) => s.classId === activeClassId),
     [students, activeClassId]
@@ -120,7 +124,7 @@ function GradesPage() {
                 <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Mapel</SelectItem>
-                  {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  {mySubjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -180,7 +184,7 @@ function GradesPage() {
               <Select value={subjectId} onValueChange={setSubjectId}>
                 <SelectTrigger><SelectValue placeholder="Pilih mapel" /></SelectTrigger>
                 <SelectContent>
-                  {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  {mySubjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
