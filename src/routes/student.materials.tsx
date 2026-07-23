@@ -41,27 +41,42 @@ function MaterialsPage() {
     );
   }
 
+  const activeSubjectIds = Array.from(new Set(classMaterials.map((m) => m.subjectId)));
+  const folders = activeSubjectIds
+    .map((id) => subjects.find((s) => s.id === id))
+    .filter((s): s is { id: string; name: string } => !!s);
+
   return (
     <div>
       <PageHeader title="Semua Materi" description="Pilih folder mata pelajaran." />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {subjects.map((s) => {
-          const count = classMaterials.filter((m) => m.subjectId === s.id).length;
-          return (
-            <button key={s.id} onClick={() => setOpenId(s.id)} className="text-left">
-              <Card className="hover:shadow-md hover:border-primary/50 transition">
-                <CardContent className="p-5 flex items-center gap-3">
-                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary"><FolderOpen className="h-6 w-6" /></div>
-                  <div>
-                    <div className="font-semibold">{s.name}</div>
-                    <div className="text-xs text-muted-foreground">{count} materi</div>
-                  </div>
-                </CardContent>
-              </Card>
-            </button>
-          );
-        })}
-      </div>
+      {folders.length === 0 ? (
+        <Card>
+          <CardContent className="p-10 text-center">
+            <FolderOpen className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+            <div className="font-semibold">Belum ada folder materi</div>
+            <p className="text-sm text-muted-foreground mt-1">Guru belum menambahkan materi untuk kelas ini.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {folders.map((s) => {
+            const count = classMaterials.filter((m) => m.subjectId === s.id).length;
+            return (
+              <button key={s.id} onClick={() => setOpenId(s.id)} className="text-left">
+                <Card className="hover:shadow-md hover:border-primary/50 transition">
+                  <CardContent className="p-5 flex items-center gap-3">
+                    <div className="grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary"><FolderOpen className="h-6 w-6" /></div>
+                    <div>
+                      <div className="font-semibold">{s.name}</div>
+                      <div className="text-xs text-muted-foreground">{count} materi</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
