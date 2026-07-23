@@ -36,6 +36,10 @@ function MaterialsPage() {
   const [q, setQ] = useState("");
   const [filterSubject, setFilterSubject] = useState<string>("all");
 
+  const mySubjects = useMemo(
+    () => subjects.filter((s) => !s.classId || s.classId === activeClassId),
+    [subjects, activeClassId]
+  );
   const classMaterials = useMemo(
     () => materials.filter((m) => m.classId === activeClassId),
     [materials, activeClassId]
