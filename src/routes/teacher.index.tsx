@@ -126,8 +126,8 @@ function MaterialsPage() {
     }
     const wb = XLSX.utils.book_new();
     const targetSubjects = filterSubject === "all"
-      ? subjects.filter((s) => classMaterials.some((m) => m.subjectId === s.id))
-      : subjects.filter((s) => s.id === filterSubject);
+      ? mySubjects.filter((s) => classMaterials.some((m) => m.subjectId === s.id))
+      : mySubjects.filter((s) => s.id === filterSubject);
     targetSubjects.forEach((s) => {
       const rows = classMaterials
         .filter((m) => m.subjectId === s.id)
