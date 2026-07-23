@@ -155,7 +155,7 @@ const toRow = {
 
 const fromRow = {
   classes: (r: any): ClassRoom => ({ id: r.id, name: r.name, grade: r.grade }),
-  subjects: (r: any): Subject => ({ id: r.id, name: r.name }),
+  subjects: (r: any): Subject => ({ id: r.id, name: r.name, classId: r.class_id ?? undefined }),
   teachers: (r: any): Teacher => ({ id: r.id, name: r.name, code: r.code, classIds: r.class_ids ?? [] }),
   materials: (r: any): Material => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, title: r.title, publishDate: r.publish_date, videoLink: r.video_link ?? undefined, fileLink: r.file_link ?? undefined, instructions: r.instructions ?? undefined }),
   modules: (r: any): Module => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, title: r.title, fileLink: r.file_link }),
