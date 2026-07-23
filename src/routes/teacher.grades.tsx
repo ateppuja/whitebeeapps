@@ -27,6 +27,10 @@ function GradesPage() {
   const [score, setScore] = useState<string>("");
   const [filterSubject, setFilterSubject] = useState<string>("all");
 
+  const mySubjects = useMemo(
+    () => subjects.filter((s) => !s.classId || s.classId === activeClassId),
+    [subjects, activeClassId]
+  );
   const classStudents = useMemo(
     () => students.filter((s) => s.classId === activeClassId),
     [students, activeClassId]
