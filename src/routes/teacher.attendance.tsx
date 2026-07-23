@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useStore, type AttendanceStatus } from "@/lib/store";
-import { successToast } from "@/lib/swal";
+import { successToast, toast } from "@/lib/swal";
 import { NoClassSelected } from "@/components/NoClassSelected";
 import { CalendarCheck, Save, FileDown } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,17 +53,29 @@ function AttendancePage() {
     setPending((p) => ({ ...p, [studentId]: status }));
   };
 
-  const saveAll = () => {
+  const saveAll = async () => {
     let count = 0;
+    let failed = 0;
+    const saves: Promise<boolean>[] = [];
     classStudents.forEach((s) => {
       const status = pending[s.id];
       if (status) {
-        saveAttendance({ studentId: s.id, date, status });
+        saves.push(saveAttendance({ studentId: s.id, date, status }));
         count++;
       }
     });
+    if (count === 0) {
+      successToast("Tidak ada perubahan");
+      return;
+    }
+    const results = await Promise.all(saves);
+    failed = results.filter((ok) => !ok).length;
+    if (failed > 0) {
+      toast.fire({ icon: "error", title: `${failed} presensi gagal tersimpan` });
+      return;
+    }
     setPending({});
-    successToast(count > 0 ? `${count} presensi tersimpan` : "Tidak ada perubahan");
+    successToast(`${count} presensi tersimpan`);
   };
 
   // Monthly summary
