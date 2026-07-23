@@ -92,9 +92,9 @@ function MaterialsPage() {
 
   const addNewCategory = () => {
     const name = newCatName.trim();
-    if (!name) return;
+    if (!name || !activeClassId) return;
     const newId = uid();
-    set("subjects", [...subjects, { id: newId, name }]);
+    set("subjects", [...subjects, { id: newId, name, classId: activeClassId }]);
     setSubjectId(newId);
     setNewCatMode(false);
     setNewCatName("");
