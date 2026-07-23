@@ -375,8 +375,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         void db.from("attendance").upsert(toRow.attendance(rec));
       }
     },
+    refresh: async () => {
+      const loaded = await loadAll();
+      if (!loaded) return;
+      skipSync.current = true;
+      setState(loaded);
+      setTimeout(() => { skipSync.current = false; }, 0);
+    },
     uid,
   };
+
 
   return <StoreContext.Provider value={ctx}>{children}</StoreContext.Provider>;
 }
