@@ -389,21 +389,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const rest = s.observations.filter((o) => !(o.studentId === rec.studentId && o.month === rec.month));
         return { ...s, observations: [...rest, rec] };
       });
-      if (!skipSync.current) {
-        const { error } = await db
-          .from("observations")
-          .upsert(toRow.observations(rec), { onConflict: "student_id,month" });
-        if (error) {
-          console.error("[cloud] save observation failed", error);
-          setState((s) => ({ ...s, observations: previous }));
-          return false;
-        }
-        const loaded = await loadAll();
-        if (loaded) {
-          skipSync.current = true;
-          setState(loaded);
-          setTimeout(() => { skipSync.current = false; }, 0);
-        }
+      const { error } = await db
+        .from("observations")
+        .upsert(toRow.observations(rec), { onConflict: "student_id,month" });
+      if (error) {
+        console.error("[cloud] save observation failed", error);
+        setState((s) => ({ ...s, observations: previous }));
+        return false;
+      }
+      const loaded = await loadAll();
+      if (loaded) {
+        skipSync.current = true;
+        setState(loaded);
+        setTimeout(() => { skipSync.current = false; }, 0);
       }
       return true;
     },
