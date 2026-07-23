@@ -40,7 +40,9 @@ function monthsInRange(from: string, to: string): string[] {
 }
 
 function ReportsPage() {
-  const { students, observations, indicators, classes, activeClassId } = useStore();
+  const { students, observations, indicators, classes, activeClassId, refresh } = useStore();
+  useEffect(() => { void refresh(); }, [refresh]);
+
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
   const [fromMonth, setFromMonth] = useState(currentMonth);
