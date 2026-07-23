@@ -304,16 +304,19 @@ export type Database = {
       }
       subjects: {
         Row: {
+          class_id: string | null
           created_at: string
           id: string
           name: string
         }
         Insert: {
+          class_id?: string | null
           created_at?: string
           id: string
           name: string
         }
         Update: {
+          class_id?: string | null
           created_at?: string
           id?: string
           name?: string
