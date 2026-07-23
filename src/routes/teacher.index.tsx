@@ -268,7 +268,7 @@ function MaterialsPage() {
                   <Select value={subjectId} onValueChange={setSubjectId}>
                     <SelectTrigger className="flex-1"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
                     <SelectContent>
-                      {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                      {mySubjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <Button type="button" variant="outline" onClick={() => { setNewCatMode(true); setNewCatName(""); }}>
