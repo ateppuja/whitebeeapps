@@ -68,7 +68,7 @@ function MaterialsPage() {
 
   const openNew = () => {
     setEditing(null);
-    setSubjectId(subjects[0]?.id ?? "");
+    setSubjectId(mySubjects[0]?.id ?? "");
     setTitle(""); setPublishDate(new Date().toISOString().slice(0, 10));
     setVideoLink(""); setFileLink(""); setInstructions("");
     setOpen(true);
