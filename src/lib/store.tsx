@@ -126,7 +126,9 @@ interface StoreContextType extends StoreState {
   update: (updater: (s: StoreState) => Partial<StoreState>) => void;
   saveObservation: (rec: ObservationRecord) => void;
   saveAttendance: (rec: AttendanceRecord) => void;
+  refresh: () => Promise<void>;
   uid: () => string;
+
 }
 
 const StoreContext = createContext<StoreContextType | null>(null);
