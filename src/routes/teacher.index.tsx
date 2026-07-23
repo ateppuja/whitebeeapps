@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useStore, type Material } from "@/lib/store";
 import { confirmDelete, successToast, swal } from "@/lib/swal";
-import { Pencil, Plus, Search, Trash2, Megaphone, FileDown } from "lucide-react";
+import { Pencil, Plus, Search, Trash2, Megaphone, FileDown, ClipboardList } from "lucide-react";
 import { NoClassSelected } from "@/components/NoClassSelected";
 import * as XLSX from "xlsx";
 
@@ -22,7 +22,8 @@ const TEACHER_ANNOUNCEMENT_KEY = "__teachers__";
 const ADD_NEW = "__add_new__";
 
 function MaterialsPage() {
-  const { materials, subjects, set, uid, activeClassId, classes, announcements } = useStore();
+  const { materials, subjects, set, uid, activeClassId, classes, announcements, students, observations, refresh } = useStore();
+  useEffect(() => { void refresh(); }, [refresh]);
   const adminAnnouncement = announcements[TEACHER_ANNOUNCEMENT_KEY]?.trim();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Material | null>(null);
@@ -50,6 +51,16 @@ function MaterialsPage() {
   );
 
   const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const classStudents = useMemo(
+    () => students.filter((s) => s.classId === activeClassId),
+    [students, activeClassId]
+  );
+  const observedThisMonth = useMemo(
+    () => classStudents.filter((s) => observations.some((o) => o.studentId === s.id && o.month === currentMonth && o.entries.length > 0)).length,
+    [classStudents, observations, currentMonth]
+  );
+  const observationPct = classStudents.length ? Math.round((observedThisMonth / classStudents.length) * 100) : 0;
 
   const openNew = () => {
     setEditing(null);
@@ -164,6 +175,21 @@ function MaterialsPage() {
           </CardContent>
         </Card>
       )}
+
+      <Card className="mb-4 border-primary/20 bg-primary/5">
+        <CardContent className="p-4 flex flex-wrap items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+            <ClipboardList className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold">Progress Matriks Observasi Bulan Ini</div>
+            <div className="text-sm text-muted-foreground">
+              {observedThisMonth} dari {classStudents.length} siswa sudah mengisi · {observationPct}%
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => void refresh()}>Refresh</Button>
+        </CardContent>
+      </Card>
 
       <Card className="mb-4">
         <CardContent className="p-4 grid gap-3 sm:grid-cols-[1fr_220px]">

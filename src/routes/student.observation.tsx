@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useStore, type IndicatorCategory, type ObservationValue } from "@/lib/store";
-import { successToast } from "@/lib/swal";
+import { successToast, swal } from "@/lib/swal";
 import { Heart, Save, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/student/observation")({ component: ObservationPage });
@@ -59,9 +59,9 @@ function ObservationPage() {
   const setNote = (id: string, note: string) =>
     setEntries((p) => ({ ...p, [id]: { ...p[id], note } }));
 
-  const save = () => {
+  const save = async () => {
     if (!student) return;
-    saveObservation({
+    const ok = await saveObservation({
       studentId: student.id,
       month,
       entries: classIndicators.map((i) => ({
@@ -70,7 +70,8 @@ function ObservationPage() {
         note: entries[i.id]?.note ?? "",
       })),
     });
-    successToast("Data observasi tersimpan");
+    if (ok) successToast("Data observasi tersimpan dan terkirim ke guru");
+    else await swal.fire({ icon: "error", title: "Gagal menyimpan", text: "Data observasi belum terkirim. Coba simpan ulang." });
   };
 
   const groups: { cat: IndicatorCategory; icon: typeof Heart; tone: string }[] = [
