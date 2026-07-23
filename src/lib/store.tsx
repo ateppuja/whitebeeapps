@@ -140,7 +140,7 @@ const db: any = supabase;
 
 const toRow = {
   classes: (x: ClassRoom) => ({ id: x.id, name: x.name, grade: x.grade }),
-  subjects: (x: Subject) => ({ id: x.id, name: x.name }),
+  subjects: (x: Subject) => ({ id: x.id, name: x.name, class_id: x.classId ?? null }),
   teachers: (x: Teacher) => ({ id: x.id, name: x.name, code: x.code, class_ids: x.classIds }),
   materials: (x: Material) => ({ id: x.id, class_id: x.classId, subject_id: x.subjectId, title: x.title, publish_date: x.publishDate, video_link: x.videoLink ?? null, file_link: x.fileLink ?? null, instructions: x.instructions ?? null }),
   modules: (x: Module) => ({ id: x.id, class_id: x.classId, subject_id: x.subjectId, title: x.title, file_link: x.fileLink }),
