@@ -28,7 +28,9 @@ const MONTH_LABEL: Record<string,string> = {
 };
 
 function TeacherObservationPage() {
-  const { indicators, observations, students, activeClassId, classes, saveObservation } = useStore();
+  const { indicators, observations, students, activeClassId, classes, saveObservation, refresh } = useStore();
+  useEffect(() => { void refresh(); }, [refresh]);
+
   const now = new Date();
   const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`);
   const classStudents = useMemo(

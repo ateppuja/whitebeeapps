@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,9 @@ function monthsInRange(from: string, to: string): string[] {
 }
 
 function ReportsPage() {
-  const { students, observations, indicators, classes, activeClassId } = useStore();
+  const { students, observations, indicators, classes, activeClassId, refresh } = useStore();
+  useEffect(() => { void refresh(); }, [refresh]);
+
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
   const [fromMonth, setFromMonth] = useState(currentMonth);

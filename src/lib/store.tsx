@@ -126,7 +126,9 @@ interface StoreContextType extends StoreState {
   update: (updater: (s: StoreState) => Partial<StoreState>) => void;
   saveObservation: (rec: ObservationRecord) => void;
   saveAttendance: (rec: AttendanceRecord) => void;
+  refresh: () => Promise<void>;
   uid: () => string;
+
 }
 
 const StoreContext = createContext<StoreContextType | null>(null);
@@ -289,6 +291,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
+  // Auto-refresh from cloud on window focus / visibility change so teachers see
+  // student updates (observations, attendance, announcements, grades, etc.)
+  // without needing to manually reload.
+  useEffect(() => {
+    if (!hydrated) return;
+    const doRefresh = async () => {
+      const loaded = await loadAll();
+      if (!loaded) return;
+      skipSync.current = true;
+      setState(loaded);
+      setTimeout(() => { skipSync.current = false; }, 0);
+    };
+    const onFocus = () => { void doRefresh(); };
+    const onVisible = () => { if (document.visibilityState === "visible") void doRefresh(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    // Light polling as a fallback (every 30s while tab open)
+    const iv = window.setInterval(doRefresh, 30000);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(iv);
+    };
+  }, [hydrated]);
+
+
   useEffect(() => {
     if (!hydrated) return;
     if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -373,8 +401,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         void db.from("attendance").upsert(toRow.attendance(rec));
       }
     },
+    refresh: async () => {
+      const loaded = await loadAll();
+      if (!loaded) return;
+      skipSync.current = true;
+      setState(loaded);
+      setTimeout(() => { skipSync.current = false; }, 0);
+    },
     uid,
   };
+
 
   return <StoreContext.Provider value={ctx}>{children}</StoreContext.Provider>;
 }
