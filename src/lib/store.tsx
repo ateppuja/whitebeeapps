@@ -12,7 +12,7 @@ export interface User {
 }
 
 export interface ClassRoom { id: string; name: string; grade: string; }
-export interface Subject { id: string; name: string; }
+export interface Subject { id: string; name: string; classId?: string; }
 export interface Teacher { id: string; name: string; classIds: string[]; code: string; }
 
 export interface Material {
