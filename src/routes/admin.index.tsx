@@ -7,18 +7,62 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useStore } from "@/lib/store";
 import { successToast } from "@/lib/swal";
-import { Users, School, KeyRound } from "lucide-react";
+import Swal from "sweetalert2";
+import { Users, School, KeyRound, Download, Upload } from "lucide-react";
+
+const BACKUP_KEYS = [
+  "classes","subjects","teachers","materials","modules","schedule",
+  "students","indicators","adabTitles","observations","attendance",
+  "grades","announcements","adminCode",
+] as const;
 
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
 function AdminDashboard() {
-  const { students, classes, adminCode, set } = useStore();
+  const store = useStore();
+  const { students, classes, adminCode, set } = store;
   const [codeInput, setCodeInput] = useState(adminCode);
 
   const perClass = classes.map((c) => ({
     ...c,
     count: students.filter((s) => s.classId === c.id).length,
   }));
+
+  const handleBackup = () => {
+    const data: Record<string, unknown> = { _exportedAt: new Date().toISOString(), _version: 1 };
+    for (const k of BACKUP_KEYS) data[k] = (store as unknown as Record<string, unknown>)[k];
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `whitebee-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    successToast("Backup diunduh");
+  };
+
+  const handleRestore = async (file: File) => {
+    const confirm = await Swal.fire({
+      title: "Pulihkan data dari backup?",
+      text: "Data cloud saat ini akan ditimpa dengan isi file backup.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, pulihkan",
+      cancelButtonText: "Batal",
+    });
+    if (!confirm.isConfirmed) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text) as Record<string, unknown>;
+      for (const k of BACKUP_KEYS) {
+        if (k in parsed) set(k as never, parsed[k] as never);
+      }
+      successToast("Data berhasil dipulihkan");
+    } catch {
+      Swal.fire({ title: "Gagal", text: "File backup tidak valid.", icon: "error" });
+    }
+  };
+
 
   const stats = [
     { label: "Total Siswa", value: students.length, icon: Users, tone: "bg-primary/10 text-primary" },
@@ -92,6 +136,40 @@ function AdminDashboard() {
                 <li className="flex items-center gap-2"><School className="h-3.5 w-3.5 text-primary" /> Kelas &amp; pengelompokan siswa</li>
               </ul>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5 text-primary" /> Backup &amp; Pemulihan Data</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Unduh salinan seluruh data aplikasi (kelas, siswa, materi, modul, jadwal, indikator, observasi, presensi, nilai, pengumuman) sebagai file JSON. Simpan berkala untuk cadangan mandiri.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={handleBackup} className="gap-2">
+                <Download className="h-4 w-4" /> Unduh Backup (JSON)
+              </Button>
+              <Button variant="outline" asChild className="gap-2 cursor-pointer">
+                <label>
+                  <Upload className="h-4 w-4" /> Pulihkan dari Backup
+                  <input
+                    type="file"
+                    accept="application/json"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleRestore(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Pemulihan akan menimpa data cloud saat ini dengan isi file backup. Pastikan file berasal dari aplikasi ini.
+            </p>
           </CardContent>
         </Card>
 
