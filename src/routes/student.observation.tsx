@@ -52,7 +52,10 @@ function ObservationPage() {
       next[i.id] = { value: e?.value ?? "BB", note: e?.note ?? "" };
     });
     setEntries(next);
-  }, [student, month, observations, classIndicators]);
+    // Only reload from cloud when student/month changes, not on every observations refresh —
+    // otherwise the 30s auto-refresh would overwrite the student's unsaved input.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [student?.id, month]);
 
   const setValue = (id: string, value: ObservationValue) =>
     setEntries((p) => ({ ...p, [id]: { ...p[id], value } }));
