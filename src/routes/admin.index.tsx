@@ -19,13 +19,50 @@ const BACKUP_KEYS = [
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
 function AdminDashboard() {
-  const { students, classes, adminCode, set } = useStore();
+  const store = useStore();
+  const { students, classes, adminCode, set } = store;
   const [codeInput, setCodeInput] = useState(adminCode);
 
   const perClass = classes.map((c) => ({
     ...c,
     count: students.filter((s) => s.classId === c.id).length,
   }));
+
+  const handleBackup = () => {
+    const data: Record<string, unknown> = { _exportedAt: new Date().toISOString(), _version: 1 };
+    for (const k of BACKUP_KEYS) data[k] = (store as unknown as Record<string, unknown>)[k];
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `whitebee-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    successToast("Backup diunduh");
+  };
+
+  const handleRestore = async (file: File) => {
+    const confirm = await Swal.fire({
+      title: "Pulihkan data dari backup?",
+      text: "Data cloud saat ini akan ditimpa dengan isi file backup.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, pulihkan",
+      cancelButtonText: "Batal",
+    });
+    if (!confirm.isConfirmed) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text) as Record<string, unknown>;
+      for (const k of BACKUP_KEYS) {
+        if (k in parsed) set(k as never, parsed[k] as never);
+      }
+      successToast("Data berhasil dipulihkan");
+    } catch {
+      Swal.fire({ title: "Gagal", text: "File backup tidak valid.", icon: "error" });
+    }
+  };
+
 
   const stats = [
     { label: "Total Siswa", value: students.length, icon: Users, tone: "bg-primary/10 text-primary" },
