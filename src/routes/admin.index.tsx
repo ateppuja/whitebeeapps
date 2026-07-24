@@ -7,7 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useStore } from "@/lib/store";
 import { successToast } from "@/lib/swal";
-import { Users, School, KeyRound } from "lucide-react";
+import Swal from "sweetalert2";
+import { Users, School, KeyRound, Download, Upload } from "lucide-react";
+
+const BACKUP_KEYS = [
+  "classes","subjects","teachers","materials","modules","schedule",
+  "students","indicators","adabTitles","observations","attendance",
+  "grades","announcements","adminCode",
+] as const;
 
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
