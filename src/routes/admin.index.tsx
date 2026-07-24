@@ -139,6 +139,40 @@ function AdminDashboard() {
           </CardContent>
         </Card>
 
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Download className="h-5 w-5 text-primary" /> Backup &amp; Pemulihan Data</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Unduh salinan seluruh data aplikasi (kelas, siswa, materi, modul, jadwal, indikator, observasi, presensi, nilai, pengumuman) sebagai file JSON. Simpan berkala untuk cadangan mandiri.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={handleBackup} className="gap-2">
+                <Download className="h-4 w-4" /> Unduh Backup (JSON)
+              </Button>
+              <Button variant="outline" asChild className="gap-2 cursor-pointer">
+                <label>
+                  <Upload className="h-4 w-4" /> Pulihkan dari Backup
+                  <input
+                    type="file"
+                    accept="application/json"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleRestore(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Pemulihan akan menimpa data cloud saat ini dengan isi file backup. Pastikan file berasal dari aplikasi ini.
+            </p>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
