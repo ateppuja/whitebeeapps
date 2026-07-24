@@ -62,6 +62,38 @@ function ObservationPage() {
   const setNote = (id: string, note: string) =>
     setEntries((p) => ({ ...p, [id]: { ...p[id], note } }));
 
+  // Auto-save with debounce — persists without waiting for the Save button.
+  const initialLoadRef = useRef(true);
+  const [autoStatus, setAutoStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  useEffect(() => {
+    // Skip the initial hydration effect that populates entries on mount / month change.
+    if (initialLoadRef.current) {
+      initialLoadRef.current = false;
+      return;
+    }
+    if (!student || classIndicators.length === 0) return;
+    setAutoStatus("saving");
+    const t = setTimeout(async () => {
+      const ok = await saveObservation({
+        studentId: student.id,
+        month,
+        entries: classIndicators.map((i) => ({
+          indicatorId: i.id,
+          value: entries[i.id]?.value ?? "BB",
+          note: entries[i.id]?.note ?? "",
+        })),
+      });
+      setAutoStatus(ok ? "saved" : "error");
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [entries, student, month, classIndicators, saveObservation]);
+
+  // Reset the initial-load guard when the target record changes.
+  useEffect(() => {
+    initialLoadRef.current = true;
+    setAutoStatus("idle");
+  }, [student?.id, month]);
+
   const save = async () => {
     if (!student) return;
     const ok = await saveObservation({
