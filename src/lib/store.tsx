@@ -167,10 +167,11 @@ const fromRow = {
   grades: (r: any): Grade => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, studentId: r.student_id, title: r.title, score: Number(r.score) }),
 };
 
-// Safe sync: upsert current rows, then delete only rows whose PK is no longer present.
-// Avoids the "DELETE ALL then INSERT" race that could wipe data if a refresh polled
-// between the two operations, or if the insert failed partially.
-async function syncTable(table: string, pkCol: string, rows: any[]) {
+// Safe sync: upsert current rows, then delete only rows that were explicitly
+// removed from the previous in-memory state. Never compare against the full
+// cloud table here, because a stale/incomplete local state could otherwise
+// delete rows that were simply not loaded in this browser session.
+async function syncTable(table: string, pkCol: string, rows: any[], previousRows?: any[]) {
   if (rows.length) {
     const { error } = await db.from(table).upsert(rows, { onConflict: pkCol });
     if (error) {
@@ -178,10 +179,9 @@ async function syncTable(table: string, pkCol: string, rows: any[]) {
       return;
     }
   }
-  const { data: existing, error: selErr } = await db.from(table).select(pkCol);
-  if (selErr) return;
+  if (!previousRows) return;
   const keep = new Set(rows.map((r) => r[pkCol]));
-  const toDelete = (existing ?? [])
+  const toDelete = previousRows
     .map((r: any) => r[pkCol])
     .filter((id: any) => id != null && !keep.has(id));
   if (toDelete.length) {
@@ -256,28 +256,29 @@ async function seedAll(s: StoreState) {
   ]);
 }
 
-async function syncKey<K extends keyof StoreState>(key: K, value: StoreState[K]) {
+async function syncKey<K extends keyof StoreState>(key: K, value: StoreState[K], previous?: StoreState[K]) {
   try {
     switch (key) {
-      case "classes": return await syncTable("classes", "id", (value as ClassRoom[]).map(toRow.classes));
-      case "subjects": return await syncTable("subjects", "id", (value as Subject[]).map(toRow.subjects));
-      case "teachers": return await syncTable("teachers", "id", (value as Teacher[]).map(toRow.teachers));
-      case "materials": return await syncTable("materials", "id", (value as Material[]).map(toRow.materials));
-      case "modules": return await syncTable("modules", "id", (value as Module[]).map(toRow.modules));
-      case "schedule": return await syncTable("schedule", "id", (value as ScheduleItem[]).map(toRow.schedule));
-      case "students": return await syncTable("students", "id", (value as Student[]).map(toRow.students));
-      case "indicators": return await syncTable("indicators", "id", (value as Indicator[]).map(toRow.indicators));
-      case "adabTitles": return await syncTable("adab_titles", "title", (value as string[]).map(toRow.adab_titles));
+      case "classes": return await syncTable("classes", "id", (value as ClassRoom[]).map(toRow.classes), (previous as ClassRoom[] | undefined)?.map(toRow.classes));
+      case "subjects": return await syncTable("subjects", "id", (value as Subject[]).map(toRow.subjects), (previous as Subject[] | undefined)?.map(toRow.subjects));
+      case "teachers": return await syncTable("teachers", "id", (value as Teacher[]).map(toRow.teachers), (previous as Teacher[] | undefined)?.map(toRow.teachers));
+      case "materials": return await syncTable("materials", "id", (value as Material[]).map(toRow.materials), (previous as Material[] | undefined)?.map(toRow.materials));
+      case "modules": return await syncTable("modules", "id", (value as Module[]).map(toRow.modules), (previous as Module[] | undefined)?.map(toRow.modules));
+      case "schedule": return await syncTable("schedule", "id", (value as ScheduleItem[]).map(toRow.schedule), (previous as ScheduleItem[] | undefined)?.map(toRow.schedule));
+      case "students": return await syncTable("students", "id", (value as Student[]).map(toRow.students), (previous as Student[] | undefined)?.map(toRow.students));
+      case "indicators": return await syncTable("indicators", "id", (value as Indicator[]).map(toRow.indicators), (previous as Indicator[] | undefined)?.map(toRow.indicators));
+      case "adabTitles": return await syncTable("adab_titles", "title", (value as string[]).map(toRow.adab_titles), (previous as string[] | undefined)?.map(toRow.adab_titles));
       case "observations": {
         // observations PK is (student_id, month); safe path: upsert current + no delete here.
         const rows = (value as ObservationRecord[]).map(toRow.observations);
         if (rows.length) await db.from("observations").upsert(rows, { onConflict: "student_id,month" });
         return;
       }
-      case "grades": return await syncTable("grades", "id", (value as Grade[]).map(toRow.grades));
+      case "grades": return await syncTable("grades", "id", (value as Grade[]).map(toRow.grades), (previous as Grade[] | undefined)?.map(toRow.grades));
       case "announcements": {
         const rows = Object.entries(value as Record<string, string>).map(([class_id, text]) => ({ class_id, text }));
-        return await syncTable("announcements", "class_id", rows);
+        const previousRows = previous ? Object.entries(previous as Record<string, string>).map(([class_id, text]) => ({ class_id, text })) : undefined;
+        return await syncTable("announcements", "class_id", rows, previousRows);
       }
       case "adminCode": {
         await db.from("settings").upsert({ key: "adminCode", value: value as string });
@@ -397,15 +398,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     logout: () => { setUser(null); },
     set: (key, value) => {
+      const previous = state[key];
       setState((s) => ({ ...s, [key]: value }));
-      if (!skipSync.current) void syncKey(key, value);
+      if (!skipSync.current) void syncKey(key, value, previous);
     },
     update: (updater) => {
       setState((s) => {
         const patch = updater(s);
         const next = { ...s, ...patch };
         if (!skipSync.current) {
-          (Object.keys(patch) as (keyof StoreState)[]).forEach((k) => void syncKey(k, next[k]));
+          (Object.keys(patch) as (keyof StoreState)[]).forEach((k) => void syncKey(k, next[k], s[k]));
         }
         return next;
       });
