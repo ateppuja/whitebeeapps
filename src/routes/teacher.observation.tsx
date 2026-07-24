@@ -62,7 +62,10 @@ function TeacherObservationPage() {
       next[i.id] = { value: e?.value ?? "BB", note: e?.note ?? "" };
     });
     setEntries(next);
-  }, [studentId, month, observations, classIndicators]);
+    // Only reload from cloud when student/month changes — auto-refresh must not
+    // overwrite the teacher's unsaved input.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentId, month]);
 
   if (!activeClassId) return <NoClassSelected />;
   const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
