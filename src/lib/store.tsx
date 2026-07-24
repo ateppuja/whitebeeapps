@@ -167,7 +167,29 @@ const fromRow = {
   grades: (r: any): Grade => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, studentId: r.student_id, title: r.title, score: Number(r.score) }),
 };
 
-// Delete-all then insert. Works regardless of PK.
+// Safe sync: upsert current rows, then delete only rows whose PK is no longer present.
+// Avoids the "DELETE ALL then INSERT" race that could wipe data if a refresh polled
+// between the two operations, or if the insert failed partially.
+async function syncTable(table: string, pkCol: string, rows: any[]) {
+  if (rows.length) {
+    const { error } = await db.from(table).upsert(rows, { onConflict: pkCol });
+    if (error) {
+      console.error(`[cloud] upsert ${table} failed`, error);
+      return;
+    }
+  }
+  const { data: existing, error: selErr } = await db.from(table).select(pkCol);
+  if (selErr) return;
+  const keep = new Set(rows.map((r) => r[pkCol]));
+  const toDelete = (existing ?? [])
+    .map((r: any) => r[pkCol])
+    .filter((id: any) => id != null && !keep.has(id));
+  if (toDelete.length) {
+    await db.from(table).delete().in(pkCol, toDelete);
+  }
+}
+
+// Legacy delete-then-insert (only kept for full seeding on first run).
 async function replaceTable(table: string, pkCol: string, rows: any[]) {
   await db.from(table).delete().not(pkCol, "is", null);
   if (rows.length) await db.from(table).insert(rows);
@@ -237,20 +259,25 @@ async function seedAll(s: StoreState) {
 async function syncKey<K extends keyof StoreState>(key: K, value: StoreState[K]) {
   try {
     switch (key) {
-      case "classes": return await replaceTable("classes", "id", (value as ClassRoom[]).map(toRow.classes));
-      case "subjects": return await replaceTable("subjects", "id", (value as Subject[]).map(toRow.subjects));
-      case "teachers": return await replaceTable("teachers", "id", (value as Teacher[]).map(toRow.teachers));
-      case "materials": return await replaceTable("materials", "id", (value as Material[]).map(toRow.materials));
-      case "modules": return await replaceTable("modules", "id", (value as Module[]).map(toRow.modules));
-      case "schedule": return await replaceTable("schedule", "id", (value as ScheduleItem[]).map(toRow.schedule));
-      case "students": return await replaceTable("students", "id", (value as Student[]).map(toRow.students));
-      case "indicators": return await replaceTable("indicators", "id", (value as Indicator[]).map(toRow.indicators));
-      case "adabTitles": return await replaceTable("adab_titles", "title", (value as string[]).map(toRow.adab_titles));
-      case "observations": return await replaceTable("observations", "student_id", (value as ObservationRecord[]).map(toRow.observations));
-      case "grades": return await replaceTable("grades", "id", (value as Grade[]).map(toRow.grades));
+      case "classes": return await syncTable("classes", "id", (value as ClassRoom[]).map(toRow.classes));
+      case "subjects": return await syncTable("subjects", "id", (value as Subject[]).map(toRow.subjects));
+      case "teachers": return await syncTable("teachers", "id", (value as Teacher[]).map(toRow.teachers));
+      case "materials": return await syncTable("materials", "id", (value as Material[]).map(toRow.materials));
+      case "modules": return await syncTable("modules", "id", (value as Module[]).map(toRow.modules));
+      case "schedule": return await syncTable("schedule", "id", (value as ScheduleItem[]).map(toRow.schedule));
+      case "students": return await syncTable("students", "id", (value as Student[]).map(toRow.students));
+      case "indicators": return await syncTable("indicators", "id", (value as Indicator[]).map(toRow.indicators));
+      case "adabTitles": return await syncTable("adab_titles", "title", (value as string[]).map(toRow.adab_titles));
+      case "observations": {
+        // observations PK is (student_id, month); safe path: upsert current + no delete here.
+        const rows = (value as ObservationRecord[]).map(toRow.observations);
+        if (rows.length) await db.from("observations").upsert(rows, { onConflict: "student_id,month" });
+        return;
+      }
+      case "grades": return await syncTable("grades", "id", (value as Grade[]).map(toRow.grades));
       case "announcements": {
         const rows = Object.entries(value as Record<string, string>).map(([class_id, text]) => ({ class_id, text }));
-        return await replaceTable("announcements", "class_id", rows);
+        return await syncTable("announcements", "class_id", rows);
       }
       case "adminCode": {
         await db.from("settings").upsert({ key: "adminCode", value: value as string });
