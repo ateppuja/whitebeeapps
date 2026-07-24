@@ -259,20 +259,25 @@ async function seedAll(s: StoreState) {
 async function syncKey<K extends keyof StoreState>(key: K, value: StoreState[K]) {
   try {
     switch (key) {
-      case "classes": return await replaceTable("classes", "id", (value as ClassRoom[]).map(toRow.classes));
-      case "subjects": return await replaceTable("subjects", "id", (value as Subject[]).map(toRow.subjects));
-      case "teachers": return await replaceTable("teachers", "id", (value as Teacher[]).map(toRow.teachers));
-      case "materials": return await replaceTable("materials", "id", (value as Material[]).map(toRow.materials));
-      case "modules": return await replaceTable("modules", "id", (value as Module[]).map(toRow.modules));
-      case "schedule": return await replaceTable("schedule", "id", (value as ScheduleItem[]).map(toRow.schedule));
-      case "students": return await replaceTable("students", "id", (value as Student[]).map(toRow.students));
-      case "indicators": return await replaceTable("indicators", "id", (value as Indicator[]).map(toRow.indicators));
-      case "adabTitles": return await replaceTable("adab_titles", "title", (value as string[]).map(toRow.adab_titles));
-      case "observations": return await replaceTable("observations", "student_id", (value as ObservationRecord[]).map(toRow.observations));
-      case "grades": return await replaceTable("grades", "id", (value as Grade[]).map(toRow.grades));
+      case "classes": return await syncTable("classes", "id", (value as ClassRoom[]).map(toRow.classes));
+      case "subjects": return await syncTable("subjects", "id", (value as Subject[]).map(toRow.subjects));
+      case "teachers": return await syncTable("teachers", "id", (value as Teacher[]).map(toRow.teachers));
+      case "materials": return await syncTable("materials", "id", (value as Material[]).map(toRow.materials));
+      case "modules": return await syncTable("modules", "id", (value as Module[]).map(toRow.modules));
+      case "schedule": return await syncTable("schedule", "id", (value as ScheduleItem[]).map(toRow.schedule));
+      case "students": return await syncTable("students", "id", (value as Student[]).map(toRow.students));
+      case "indicators": return await syncTable("indicators", "id", (value as Indicator[]).map(toRow.indicators));
+      case "adabTitles": return await syncTable("adab_titles", "title", (value as string[]).map(toRow.adab_titles));
+      case "observations": {
+        // observations PK is (student_id, month); safe path: upsert current + no delete here.
+        const rows = (value as ObservationRecord[]).map(toRow.observations);
+        if (rows.length) await db.from("observations").upsert(rows, { onConflict: "student_id,month" });
+        return;
+      }
+      case "grades": return await syncTable("grades", "id", (value as Grade[]).map(toRow.grades));
       case "announcements": {
         const rows = Object.entries(value as Record<string, string>).map(([class_id, text]) => ({ class_id, text }));
-        return await replaceTable("announcements", "class_id", rows);
+        return await syncTable("announcements", "class_id", rows);
       }
       case "adminCode": {
         await db.from("settings").upsert({ key: "adminCode", value: value as string });
