@@ -214,7 +214,12 @@ function ObservationPage() {
         })}
       </div>
 
-      <div className="mt-6 flex justify-end">
+      <div className="mt-6 flex items-center justify-end gap-3">
+        <span className="text-xs text-muted-foreground">
+          {autoStatus === "saving" && "Menyimpan otomatis..."}
+          {autoStatus === "saved" && "Tersimpan otomatis"}
+          {autoStatus === "error" && <span className="text-destructive">Gagal auto-save, coba tombol Simpan</span>}
+        </span>
         <Button size="lg" onClick={save} className="h-12 px-8 text-base font-bold">
           <Save className="h-5 w-5 mr-2" /> Simpan &amp; Update Data
         </Button>
