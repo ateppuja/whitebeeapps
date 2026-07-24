@@ -167,7 +167,29 @@ const fromRow = {
   grades: (r: any): Grade => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, studentId: r.student_id, title: r.title, score: Number(r.score) }),
 };
 
-// Delete-all then insert. Works regardless of PK.
+// Safe sync: upsert current rows, then delete only rows whose PK is no longer present.
+// Avoids the "DELETE ALL then INSERT" race that could wipe data if a refresh polled
+// between the two operations, or if the insert failed partially.
+async function syncTable(table: string, pkCol: string, rows: any[]) {
+  if (rows.length) {
+    const { error } = await db.from(table).upsert(rows, { onConflict: pkCol });
+    if (error) {
+      console.error(`[cloud] upsert ${table} failed`, error);
+      return;
+    }
+  }
+  const { data: existing, error: selErr } = await db.from(table).select(pkCol);
+  if (selErr) return;
+  const keep = new Set(rows.map((r) => r[pkCol]));
+  const toDelete = (existing ?? [])
+    .map((r: any) => r[pkCol])
+    .filter((id: any) => id != null && !keep.has(id));
+  if (toDelete.length) {
+    await db.from(table).delete().in(pkCol, toDelete);
+  }
+}
+
+// Legacy delete-then-insert (only kept for full seeding on first run).
 async function replaceTable(table: string, pkCol: string, rows: any[]) {
   await db.from(table).delete().not(pkCol, "is", null);
   if (rows.length) await db.from(table).insert(rows);
