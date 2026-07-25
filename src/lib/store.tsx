@@ -218,7 +218,33 @@ async function selectAll(table: string): Promise<any[]> {
   return out;
 }
 
+// Every page calls refresh() on mount and polling fires periodically. Without
+// coalescing, that means many full downloads of all 14 tables per minute.
+// Reuse one in-flight request and cache the result briefly.
+const LOAD_TTL = 60000;
+let lastLoadAt = 0;
+let lastLoaded: StoreState | null = null;
+let inflight: Promise<StoreState | null> | null = null;
+async function throttledLoadAll(force = false): Promise<StoreState | null> {
+  if (!force && lastLoaded && Date.now() - lastLoadAt < LOAD_TTL) return lastLoaded;
+  if (inflight) return inflight;
+  inflight = loadAll().then((res) => {
+    if (res) { lastLoaded = res; lastLoadAt = Date.now(); }
+    inflight = null;
+    return res;
+  }).catch((e) => { inflight = null; throw e; });
+  return inflight;
+}
+
+
+function invalidateLoadCache() {
+  lastLoadAt = 0;
+  lastLoaded = null;
+}
+
 async function loadAll(): Promise<StoreState | null> {
+
+
   try {
     const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at, gr] = await Promise.all([
       selectAll("classes"),
@@ -330,13 +356,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const track = (p: Promise<unknown>) => {
     pendingWrites.current += 1;
     lastWriteAt.current = Date.now();
+    invalidateLoadCache();
     void Promise.resolve(p)
       .catch((e) => console.error("[cloud] write failed", e))
       .finally(() => {
         pendingWrites.current -= 1;
         lastWriteAt.current = Date.now();
+        invalidateLoadCache();
       });
   };
+
 
   const applyRemote = (loaded: StoreState) => {
     skipSync.current = true;
@@ -381,7 +410,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // Don't pull while local edits are still being saved (or were just saved),
       // otherwise fresh input gets replaced by older cloud rows.
       if (pendingWrites.current > 0 || Date.now() - lastWriteAt.current < 4000) return;
-      const loaded = await loadAll();
+      const loaded = await throttledLoadAll();
       if (!loaded) return;
       if (pendingWrites.current > 0 || Date.now() - lastWriteAt.current < 4000) return;
       applyRemote(loaded);
@@ -390,14 +419,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const onVisible = () => { if (document.visibilityState === "visible") void doRefresh(); };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisible);
-    // Light polling as a fallback (every 30s while tab open)
-    const iv = window.setInterval(doRefresh, 30000);
+    // Light polling as a fallback (every 5 minutes while tab open). Anything
+    // more frequent multiplies network usage without a real UX benefit.
+    const iv = window.setInterval(doRefresh, 300000);
     return () => {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisible);
       window.clearInterval(iv);
     };
   }, [hydrated]);
+
 
 
 
@@ -480,11 +511,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
       pendingWrites.current += 1;
       lastWriteAt.current = Date.now();
+      invalidateLoadCache();
       const { error } = await db
         .from("observations")
         .upsert(toRow.observations(rec), { onConflict: "student_id,month" });
       pendingWrites.current -= 1;
       lastWriteAt.current = Date.now();
+      invalidateLoadCache();
       if (error) {
         console.error("[cloud] save observation failed", error);
         setState((s) => ({ ...s, observations: previous }));
@@ -503,11 +536,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
       pendingWrites.current += 1;
       lastWriteAt.current = Date.now();
+      invalidateLoadCache();
       const { error } = await db
         .from("attendance")
         .upsert(toRow.attendance(rec), { onConflict: "student_id,date" });
       pendingWrites.current -= 1;
       lastWriteAt.current = Date.now();
+      invalidateLoadCache();
       if (error) {
         console.error("[cloud] save attendance failed", error);
         setState((s) => ({ ...s, attendance: previous }));
@@ -517,10 +552,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     refresh: async () => {
       if (pendingWrites.current > 0) return;
-      const loaded = await loadAll();
+      const loaded = await throttledLoadAll();
       if (!loaded || pendingWrites.current > 0) return;
       applyRemote(loaded);
     },
+
 
     uid,
   };
