@@ -319,16 +319,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [activeClassId, setActiveClassIdState] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const skipSync = useRef(true);
+  // Tracks in-flight cloud writes so a background refresh can never overwrite
+  // local state that has not finished persisting yet.
+  const pendingWrites = useRef(0);
+  const lastWriteAt = useRef(0);
+  const track = (p: Promise<unknown>) => {
+    pendingWrites.current += 1;
+    lastWriteAt.current = Date.now();
+    void Promise.resolve(p)
+      .catch((e) => console.error("[cloud] write failed", e))
+      .finally(() => {
+        pendingWrites.current -= 1;
+        lastWriteAt.current = Date.now();
+      });
+  };
+
+  const applyRemote = (loaded: StoreState) => {
+    skipSync.current = true;
+    setState(loaded);
+    setTimeout(() => { skipSync.current = false; }, 0);
+  };
 
   useEffect(() => {
     (async () => {
       const loaded = await loadAll();
-      if (loaded && loaded.classes.length > 0) {
-        setState(loaded);
+      if (loaded) {
+        // Cloud reachable: use it as-is. Only seed when it is genuinely empty.
+        if (loaded.classes.length > 0) {
+          setState(loaded);
+        } else {
+          await seedAll(initialState);
+          setState(initialState);
+        }
       } else {
-        // First run: seed cloud with initial data
-        await seedAll(initialState);
-        setState(initialState);
+        // Load failed (offline / transient error). Show nothing destructive and
+        // never seed — seeding would wipe existing cloud rows.
+        console.warn("[cloud] initial load failed; skipping seed to protect data");
       }
       try {
         const u = localStorage.getItem(USER_KEY);
@@ -348,11 +374,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     const doRefresh = async () => {
+      // Don't pull while local edits are still being saved (or were just saved),
+      // otherwise fresh input gets replaced by older cloud rows.
+      if (pendingWrites.current > 0 || Date.now() - lastWriteAt.current < 4000) return;
       const loaded = await loadAll();
       if (!loaded) return;
-      skipSync.current = true;
-      setState(loaded);
-      setTimeout(() => { skipSync.current = false; }, 0);
+      if (pendingWrites.current > 0 || Date.now() - lastWriteAt.current < 4000) return;
+      applyRemote(loaded);
     };
     const onFocus = () => { void doRefresh(); };
     const onVisible = () => { if (document.visibilityState === "visible") void doRefresh(); };
@@ -366,6 +394,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       window.clearInterval(iv);
     };
   }, [hydrated]);
+
 
 
   useEffect(() => {
