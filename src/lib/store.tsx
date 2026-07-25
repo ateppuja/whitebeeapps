@@ -167,8 +167,8 @@ const fromRow = {
   grades: (r: any): Grade => ({ id: r.id, classId: r.class_id, subjectId: r.subject_id, studentId: r.student_id, title: r.title, score: Number(r.score) }),
 };
 
-// Safe sync: upsert current rows, then delete only rows that were explicitly
-// removed from the previous in-memory state. Never compare against the full
+// Safe sync: upsert current rows, then delete only tiny, deliberate-looking
+// removals from the previous in-memory state. Never compare against the full
 // cloud table here, because a stale/incomplete local state could otherwise
 // delete rows that were simply not loaded in this browser session.
 async function syncTable(table: string, pkCol: string, rows: any[], previousRows?: any[]) {
@@ -185,20 +185,22 @@ async function syncTable(table: string, pkCol: string, rows: any[], previousRows
     .map((r: any) => r[pkCol])
     .filter((id: any) => id != null && !keep.has(id));
   if (!toDelete.length) return;
-  // Safety valve: a legitimate UI action deletes a handful of rows. A huge diff
-  // means the caller worked from stale/partial state (e.g. a race with the
-  // background refresh), so refuse it instead of wiping real data.
-  if (toDelete.length > 25) {
-    console.warn(`[cloud] refused suspicious bulk delete of ${toDelete.length} rows in ${table}`);
+  // Safety valve: a legitimate UI action deletes one or a few rows. Emptying a
+  // table, deleting many rows, or deleting a large percentage usually means the
+  // caller worked from stale/partial state, so refuse it instead of wiping data.
+  const deleteRatio = previousRows.length ? toDelete.length / previousRows.length : 0;
+  if (rows.length === 0 || toDelete.length > 5 || (previousRows.length > 5 && deleteRatio > 0.2)) {
+    console.warn(`[cloud] refused suspicious delete of ${toDelete.length} rows in ${table}`);
     return;
   }
-  await db.from(table).delete().in(pkCol, toDelete);
+  const { error } = await db.from(table).delete().in(pkCol, toDelete);
+  if (error) console.error(`[cloud] delete ${table} failed`, error);
 }
 
-// Legacy delete-then-insert (only kept for full seeding on first run).
-async function replaceTable(table: string, pkCol: string, rows: any[]) {
-  await db.from(table).delete().not(pkCol, "is", null);
-  if (rows.length) await db.from(table).insert(rows);
+// First-run seeding must be non-destructive. It only inserts/updates demo rows
+// when the database is genuinely empty; it never deletes existing cloud data.
+async function seedTable(table: string, pkCol: string, rows: any[]) {
+  if (rows.length) await db.from(table).upsert(rows, { onConflict: pkCol });
 }
 
 // PostgREST caps a plain select at 1000 rows. Page through everything so large
@@ -264,17 +266,19 @@ async function loadAll(): Promise<StoreState | null> {
 
 async function seedAll(s: StoreState) {
   await Promise.all([
-    replaceTable("classes", "id", s.classes.map(toRow.classes)),
-    replaceTable("subjects", "id", s.subjects.map(toRow.subjects)),
-    replaceTable("teachers", "id", s.teachers.map(toRow.teachers)),
-    replaceTable("materials", "id", s.materials.map(toRow.materials)),
-    replaceTable("modules", "id", s.modules.map(toRow.modules)),
-    replaceTable("schedule", "id", s.schedule.map(toRow.schedule)),
-    replaceTable("students", "id", s.students.map(toRow.students)),
-    replaceTable("indicators", "id", s.indicators.map(toRow.indicators)),
-    replaceTable("adab_titles", "title", s.adabTitles.map(toRow.adab_titles)),
-    replaceTable("observations", "student_id", s.observations.map(toRow.observations)),
-    replaceTable("announcements", "class_id", Object.entries(s.announcements).map(([class_id, text]) => ({ class_id, text }))),
+    seedTable("classes", "id", s.classes.map(toRow.classes)),
+    seedTable("subjects", "id", s.subjects.map(toRow.subjects)),
+    seedTable("teachers", "id", s.teachers.map(toRow.teachers)),
+    seedTable("materials", "id", s.materials.map(toRow.materials)),
+    seedTable("modules", "id", s.modules.map(toRow.modules)),
+    seedTable("schedule", "id", s.schedule.map(toRow.schedule)),
+    seedTable("students", "id", s.students.map(toRow.students)),
+    seedTable("indicators", "id", s.indicators.map(toRow.indicators)),
+    seedTable("adab_titles", "title", s.adabTitles.map(toRow.adab_titles)),
+    seedTable("observations", "student_id,month", s.observations.map(toRow.observations)),
+    seedTable("announcements", "class_id", Object.entries(s.announcements).map(([class_id, text]) => ({ class_id, text }))),
+    seedTable("attendance", "student_id,date", s.attendance.map(toRow.attendance)),
+    seedTable("grades", "id", s.grades.map(toRow.grades)),
     db.from("settings").upsert({ key: "adminCode", value: s.adminCode }),
   ]);
 }
@@ -450,9 +454,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     logout: () => { setUser(null); },
     set: (key, value) => {
-      const previous = state[key];
-      setState((s) => ({ ...s, [key]: value }));
-      if (!skipSync.current) track(syncKey(key, value, previous));
+      setState((s) => {
+        const previous = s[key];
+        const next = { ...s, [key]: value };
+        if (!skipSync.current) track(syncKey(key, value, previous));
+        return next;
+      });
     },
     update: (updater) => {
       setState((s) => {
@@ -465,8 +472,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
     },
     saveObservation: async (rec) => {
-      const previous = state.observations;
+      let previous: ObservationRecord[] = [];
       setState((s) => {
+        previous = s.observations;
         const rest = s.observations.filter((o) => !(o.studentId === rec.studentId && o.month === rec.month));
         return { ...s, observations: [...rest, rec] };
       });
@@ -487,8 +495,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return true;
     },
     saveAttendance: async (rec) => {
-      const previous = state.attendance;
+      let previous: AttendanceRecord[] = [];
       setState((s) => {
+        previous = s.attendance;
         const rest = s.attendance.filter((a) => !(a.studentId === rec.studentId && a.date === rec.date));
         return { ...s, attendance: [...rest, rec] };
       });
