@@ -65,7 +65,7 @@ function LoginPage() {
     e.preventDefault();
     if (role === "admin") {
       if (adminInput.trim() !== adminCode) {
-        await swal.fire({ icon: "error", title: "Kode admin salah", text: `Demo kode: ${adminCode}` });
+        await swal.fire({ icon: "error", title: "Kode admin salah" });
         return;
       }
       login("admin", "Admin Sekolah");
