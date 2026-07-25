@@ -16,6 +16,27 @@ const BACKUP_KEYS = [
   "grades","announcements","adminCode",
 ] as const;
 
+type BackupKey = typeof BACKUP_KEYS[number];
+
+const rowKey = (key: BackupKey, row: unknown) => {
+  if (typeof row !== "object" || row === null) return String(row);
+  const r = row as Record<string, unknown>;
+  if (key === "observations") return `${r.studentId ?? ""}:${r.month ?? ""}`;
+  if (key === "attendance") return `${r.studentId ?? ""}:${r.date ?? ""}`;
+  return String(r.id ?? r.title ?? JSON.stringify(r));
+};
+
+const mergeBackupValue = (key: BackupKey, current: unknown, incoming: unknown) => {
+  if (key === "adminCode") return typeof incoming === "string" && incoming.trim() ? incoming : current;
+  if (key === "announcements") return { ...(current as Record<string, string>), ...(incoming as Record<string, string>) };
+  if (!Array.isArray(current) || !Array.isArray(incoming)) return current;
+  if (key === "adabTitles") return Array.from(new Set([...current, ...incoming]));
+  const merged = new Map<string, unknown>();
+  current.forEach((row) => merged.set(rowKey(key, row), row));
+  incoming.forEach((row) => merged.set(rowKey(key, row), row));
+  return Array.from(merged.values());
+};
+
 export const Route = createFileRoute("/admin/")({ component: AdminDashboard });
 
 function AdminDashboard() {
@@ -43,11 +64,11 @@ function AdminDashboard() {
 
   const handleRestore = async (file: File) => {
     const confirm = await Swal.fire({
-      title: "Pulihkan data dari backup?",
-      text: "Data cloud saat ini akan ditimpa dengan isi file backup.",
+      title: "Impor data dari backup?",
+      text: "Data dari file akan ditambahkan/diperbarui tanpa menghapus data yang sudah ada.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Ya, pulihkan",
+      confirmButtonText: "Ya, impor",
       cancelButtonText: "Batal",
     });
     if (!confirm.isConfirmed) return;
@@ -55,9 +76,12 @@ function AdminDashboard() {
       const text = await file.text();
       const parsed = JSON.parse(text) as Record<string, unknown>;
       for (const k of BACKUP_KEYS) {
-        if (k in parsed) set(k as never, parsed[k] as never);
+        if (k in parsed) {
+          const current = (store as unknown as Record<string, unknown>)[k];
+          set(k as never, mergeBackupValue(k, current, parsed[k]) as never);
+        }
       }
-      successToast("Data berhasil dipulihkan");
+      successToast("Data backup berhasil diimpor");
     } catch {
       Swal.fire({ title: "Gagal", text: "File backup tidak valid.", icon: "error" });
     }
@@ -153,7 +177,7 @@ function AdminDashboard() {
               </Button>
               <Button variant="outline" asChild className="gap-2 cursor-pointer">
                 <label>
-                  <Upload className="h-4 w-4" /> Pulihkan dari Backup
+                  <Upload className="h-4 w-4" /> Impor Backup
                   <input
                     type="file"
                     accept="application/json"
@@ -168,7 +192,7 @@ function AdminDashboard() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Pemulihan akan menimpa data cloud saat ini dengan isi file backup. Pastikan file berasal dari aplikasi ini.
+              Impor backup tidak menghapus data lama; data dengan ID yang sama akan diperbarui. Pastikan file berasal dari aplikasi ini.
             </p>
           </CardContent>
         </Card>
