@@ -381,7 +381,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // Don't pull while local edits are still being saved (or were just saved),
       // otherwise fresh input gets replaced by older cloud rows.
       if (pendingWrites.current > 0 || Date.now() - lastWriteAt.current < 4000) return;
-      const loaded = await loadAll();
+      const loaded = await throttledLoadAll();
       if (!loaded) return;
       if (pendingWrites.current > 0 || Date.now() - lastWriteAt.current < 4000) return;
       applyRemote(loaded);
@@ -390,14 +390,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const onVisible = () => { if (document.visibilityState === "visible") void doRefresh(); };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisible);
-    // Light polling as a fallback (every 30s while tab open)
-    const iv = window.setInterval(doRefresh, 30000);
+    // Light polling as a fallback (every 5 minutes while tab open). Anything
+    // more frequent multiplies network usage without a real UX benefit.
+    const iv = window.setInterval(doRefresh, 300000);
     return () => {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisible);
       window.clearInterval(iv);
     };
   }, [hydrated]);
+
 
 
 
