@@ -184,9 +184,15 @@ async function syncTable(table: string, pkCol: string, rows: any[], previousRows
   const toDelete = previousRows
     .map((r: any) => r[pkCol])
     .filter((id: any) => id != null && !keep.has(id));
-  if (toDelete.length) {
-    await db.from(table).delete().in(pkCol, toDelete);
+  if (!toDelete.length) return;
+  // Safety valve: a legitimate UI action deletes a handful of rows. A huge diff
+  // means the caller worked from stale/partial state (e.g. a race with the
+  // background refresh), so refuse it instead of wiping real data.
+  if (toDelete.length > 25) {
+    console.warn(`[cloud] refused suspicious bulk delete of ${toDelete.length} rows in ${table}`);
+    return;
   }
+  await db.from(table).delete().in(pkCol, toDelete);
 }
 
 // Legacy delete-then-insert (only kept for full seeding on first run).
@@ -195,49 +201,66 @@ async function replaceTable(table: string, pkCol: string, rows: any[]) {
   if (rows.length) await db.from(table).insert(rows);
 }
 
+// PostgREST caps a plain select at 1000 rows. Page through everything so large
+// tables (attendance, grades, observations) never look "half deleted".
+const PAGE = 1000;
+async function selectAll(table: string): Promise<any[]> {
+  const out: any[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await db.from(table).select("*").range(from, from + PAGE - 1);
+    if (error) throw new Error(`${table}: ${error.message}`);
+    const rows = data ?? [];
+    out.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return out;
+}
+
 async function loadAll(): Promise<StoreState | null> {
   try {
     const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at, gr] = await Promise.all([
-      db.from("classes").select("*"),
-      db.from("subjects").select("*"),
-      db.from("teachers").select("*"),
-      db.from("materials").select("*"),
-      db.from("modules").select("*"),
-      db.from("schedule").select("*"),
-      db.from("students").select("*"),
-      db.from("indicators").select("*"),
-      db.from("adab_titles").select("*"),
-      db.from("observations").select("*"),
-      db.from("announcements").select("*"),
-      db.from("settings").select("*"),
-      db.from("attendance").select("*"),
-      db.from("grades").select("*"),
+      selectAll("classes"),
+      selectAll("subjects"),
+      selectAll("teachers"),
+      selectAll("materials"),
+      selectAll("modules"),
+      selectAll("schedule"),
+      selectAll("students"),
+      selectAll("indicators"),
+      selectAll("adab_titles"),
+      selectAll("observations"),
+      selectAll("announcements"),
+      selectAll("settings"),
+      selectAll("attendance"),
+      selectAll("grades"),
     ]);
     const announcements: Record<string, string> = {};
-    (an.data ?? []).forEach((r: any) => { announcements[r.class_id] = r.text; });
+    an.forEach((r: any) => { announcements[r.class_id] = r.text; });
     const settings: Record<string, string> = {};
-    (se.data ?? []).forEach((r: any) => { settings[r.key] = r.value; });
+    se.forEach((r: any) => { settings[r.key] = r.value; });
     return {
-      classes: (c.data ?? []).map(fromRow.classes),
-      subjects: (s.data ?? []).map(fromRow.subjects),
-      teachers: (t.data ?? []).map(fromRow.teachers),
-      materials: (m.data ?? []).map(fromRow.materials),
-      modules: (mo.data ?? []).map(fromRow.modules),
-      schedule: (sch.data ?? []).map(fromRow.schedule),
-      students: (st.data ?? []).map(fromRow.students),
-      indicators: (ind.data ?? []).map(fromRow.indicators),
-      adabTitles: (ad.data ?? []).map((r: any) => r.title),
-      observations: (ob.data ?? []).map(fromRow.observations),
-      attendance: (at.data ?? []).map(fromRow.attendance),
-      grades: (gr.data ?? []).map(fromRow.grades),
+      classes: c.map(fromRow.classes),
+      subjects: s.map(fromRow.subjects),
+      teachers: t.map(fromRow.teachers),
+      materials: m.map(fromRow.materials),
+      modules: mo.map(fromRow.modules),
+      schedule: sch.map(fromRow.schedule),
+      students: st.map(fromRow.students),
+      indicators: ind.map(fromRow.indicators),
+      adabTitles: ad.map((r: any) => r.title),
+      observations: ob.map(fromRow.observations),
+      attendance: at.map(fromRow.attendance),
+      grades: gr.map(fromRow.grades),
       announcements,
       adminCode: settings.adminCode ?? initialState.adminCode,
     };
   } catch (e) {
+    // A failed/partial load must NEVER be treated as "cloud is empty".
     console.error("[cloud] load failed", e);
     return null;
   }
 }
+
 
 async function seedAll(s: StoreState) {
   await Promise.all([
@@ -296,16 +319,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [activeClassId, setActiveClassIdState] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const skipSync = useRef(true);
+  // Tracks in-flight cloud writes so a background refresh can never overwrite
+  // local state that has not finished persisting yet.
+  const pendingWrites = useRef(0);
+  const lastWriteAt = useRef(0);
+  const track = (p: Promise<unknown>) => {
+    pendingWrites.current += 1;
+    lastWriteAt.current = Date.now();
+    void Promise.resolve(p)
+      .catch((e) => console.error("[cloud] write failed", e))
+      .finally(() => {
+        pendingWrites.current -= 1;
+        lastWriteAt.current = Date.now();
+      });
+  };
+
+  const applyRemote = (loaded: StoreState) => {
+    skipSync.current = true;
+    setState(loaded);
+    setTimeout(() => { skipSync.current = false; }, 0);
+  };
 
   useEffect(() => {
     (async () => {
       const loaded = await loadAll();
-      if (loaded && loaded.classes.length > 0) {
-        setState(loaded);
+      if (loaded) {
+        // Cloud reachable: use it as-is. Only seed when it is genuinely empty.
+        if (loaded.classes.length > 0) {
+          setState(loaded);
+        } else {
+          await seedAll(initialState);
+          setState(initialState);
+        }
       } else {
-        // First run: seed cloud with initial data
-        await seedAll(initialState);
-        setState(initialState);
+        // Load failed (offline / transient error). Show nothing destructive and
+        // never seed — seeding would wipe existing cloud rows.
+        console.warn("[cloud] initial load failed; skipping seed to protect data");
       }
       try {
         const u = localStorage.getItem(USER_KEY);
@@ -325,11 +374,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
     const doRefresh = async () => {
+      // Don't pull while local edits are still being saved (or were just saved),
+      // otherwise fresh input gets replaced by older cloud rows.
+      if (pendingWrites.current > 0 || Date.now() - lastWriteAt.current < 4000) return;
       const loaded = await loadAll();
       if (!loaded) return;
-      skipSync.current = true;
-      setState(loaded);
-      setTimeout(() => { skipSync.current = false; }, 0);
+      if (pendingWrites.current > 0 || Date.now() - lastWriteAt.current < 4000) return;
+      applyRemote(loaded);
     };
     const onFocus = () => { void doRefresh(); };
     const onVisible = () => { if (document.visibilityState === "visible") void doRefresh(); };
@@ -343,6 +394,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       window.clearInterval(iv);
     };
   }, [hydrated]);
+
 
 
   useEffect(() => {
@@ -400,14 +452,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     set: (key, value) => {
       const previous = state[key];
       setState((s) => ({ ...s, [key]: value }));
-      if (!skipSync.current) void syncKey(key, value, previous);
+      if (!skipSync.current) track(syncKey(key, value, previous));
     },
     update: (updater) => {
       setState((s) => {
         const patch = updater(s);
         const next = { ...s, ...patch };
         if (!skipSync.current) {
-          (Object.keys(patch) as (keyof StoreState)[]).forEach((k) => void syncKey(k, next[k], s[k]));
+          (Object.keys(patch) as (keyof StoreState)[]).forEach((k) => track(syncKey(k, next[k], s[k])));
         }
         return next;
       });
@@ -418,49 +470,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const rest = s.observations.filter((o) => !(o.studentId === rec.studentId && o.month === rec.month));
         return { ...s, observations: [...rest, rec] };
       });
+      pendingWrites.current += 1;
+      lastWriteAt.current = Date.now();
       const { error } = await db
         .from("observations")
         .upsert(toRow.observations(rec), { onConflict: "student_id,month" });
+      pendingWrites.current -= 1;
+      lastWriteAt.current = Date.now();
       if (error) {
         console.error("[cloud] save observation failed", error);
         setState((s) => ({ ...s, observations: previous }));
         return false;
       }
-      const loaded = await loadAll();
-      if (loaded) {
-        skipSync.current = true;
-        setState(loaded);
-        setTimeout(() => { skipSync.current = false; }, 0);
-      }
+      // No full reload here: the local record already matches what was written,
+      // and pulling the whole cloud could clobber other unsaved input.
       return true;
     },
     saveAttendance: async (rec) => {
+      const previous = state.attendance;
       setState((s) => {
         const rest = s.attendance.filter((a) => !(a.studentId === rec.studentId && a.date === rec.date));
         return { ...s, attendance: [...rest, rec] };
       });
+      pendingWrites.current += 1;
+      lastWriteAt.current = Date.now();
       const { error } = await db
         .from("attendance")
         .upsert(toRow.attendance(rec), { onConflict: "student_id,date" });
+      pendingWrites.current -= 1;
+      lastWriteAt.current = Date.now();
       if (error) {
         console.error("[cloud] save attendance failed", error);
-        const loaded = await loadAll();
-        if (loaded) {
-          skipSync.current = true;
-          setState(loaded);
-          setTimeout(() => { skipSync.current = false; }, 0);
-        }
+        setState((s) => ({ ...s, attendance: previous }));
         return false;
       }
       return true;
     },
     refresh: async () => {
+      if (pendingWrites.current > 0) return;
       const loaded = await loadAll();
-      if (!loaded) return;
-      skipSync.current = true;
-      setState(loaded);
-      setTimeout(() => { skipSync.current = false; }, 0);
+      if (!loaded || pendingWrites.current > 0) return;
+      applyRemote(loaded);
     },
+
     uid,
   };
 
