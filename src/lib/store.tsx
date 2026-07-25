@@ -236,7 +236,14 @@ async function throttledLoadAll(force = false): Promise<StoreState | null> {
   return inflight;
 }
 
+
+function invalidateLoadCache() {
+  lastLoadAt = 0;
+  lastLoaded = null;
+}
+
 async function loadAll(): Promise<StoreState | null> {
+
 
   try {
     const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at, gr] = await Promise.all([
