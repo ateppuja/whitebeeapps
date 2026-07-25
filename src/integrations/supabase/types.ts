@@ -89,6 +89,30 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_records_archive: {
+        Row: {
+          deleted_at: string
+          id: string
+          record_key: string
+          row_data: Json
+          table_name: string
+        }
+        Insert: {
+          deleted_at?: string
+          id?: string
+          record_key: string
+          row_data: Json
+          table_name: string
+        }
+        Update: {
+          deleted_at?: string
+          id?: string
+          record_key?: string
+          row_data?: Json
+          table_name?: string
+        }
+        Relationships: []
+      }
       grades: {
         Row: {
           class_id: string
