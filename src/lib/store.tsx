@@ -511,11 +511,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
       pendingWrites.current += 1;
       lastWriteAt.current = Date.now();
+      invalidateLoadCache();
       const { error } = await db
         .from("observations")
         .upsert(toRow.observations(rec), { onConflict: "student_id,month" });
       pendingWrites.current -= 1;
       lastWriteAt.current = Date.now();
+      invalidateLoadCache();
       if (error) {
         console.error("[cloud] save observation failed", error);
         setState((s) => ({ ...s, observations: previous }));
@@ -534,11 +536,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
       pendingWrites.current += 1;
       lastWriteAt.current = Date.now();
+      invalidateLoadCache();
       const { error } = await db
         .from("attendance")
         .upsert(toRow.attendance(rec), { onConflict: "student_id,date" });
       pendingWrites.current -= 1;
       lastWriteAt.current = Date.now();
+      invalidateLoadCache();
       if (error) {
         console.error("[cloud] save attendance failed", error);
         setState((s) => ({ ...s, attendance: previous }));
