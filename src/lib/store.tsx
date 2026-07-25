@@ -218,7 +218,26 @@ async function selectAll(table: string): Promise<any[]> {
   return out;
 }
 
+// Every page calls refresh() on mount and polling fires periodically. Without
+// coalescing, that means many full downloads of all 14 tables per minute.
+// Reuse one in-flight request and cache the result briefly.
+const LOAD_TTL = 60000;
+let lastLoadAt = 0;
+let lastLoaded: StoreState | null = null;
+let inflight: Promise<StoreState | null> | null = null;
+async function throttledLoadAll(force = false): Promise<StoreState | null> {
+  if (!force && lastLoaded && Date.now() - lastLoadAt < LOAD_TTL) return lastLoaded;
+  if (inflight) return inflight;
+  inflight = loadAll().then((res) => {
+    if (res) { lastLoaded = res; lastLoadAt = Date.now(); }
+    inflight = null;
+    return res;
+  }).catch((e) => { inflight = null; throw e; });
+  return inflight;
+}
+
 async function loadAll(): Promise<StoreState | null> {
+
   try {
     const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at, gr] = await Promise.all([
       selectAll("classes"),
