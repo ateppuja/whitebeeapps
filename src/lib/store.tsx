@@ -184,9 +184,15 @@ async function syncTable(table: string, pkCol: string, rows: any[], previousRows
   const toDelete = previousRows
     .map((r: any) => r[pkCol])
     .filter((id: any) => id != null && !keep.has(id));
-  if (toDelete.length) {
-    await db.from(table).delete().in(pkCol, toDelete);
+  if (!toDelete.length) return;
+  // Safety valve: a legitimate UI action deletes a handful of rows. A huge diff
+  // means the caller worked from stale/partial state (e.g. a race with the
+  // background refresh), so refuse it instead of wiping real data.
+  if (toDelete.length > 25) {
+    console.warn(`[cloud] refused suspicious bulk delete of ${toDelete.length} rows in ${table}`);
+    return;
   }
+  await db.from(table).delete().in(pkCol, toDelete);
 }
 
 // Legacy delete-then-insert (only kept for full seeding on first run).
@@ -195,49 +201,66 @@ async function replaceTable(table: string, pkCol: string, rows: any[]) {
   if (rows.length) await db.from(table).insert(rows);
 }
 
+// PostgREST caps a plain select at 1000 rows. Page through everything so large
+// tables (attendance, grades, observations) never look "half deleted".
+const PAGE = 1000;
+async function selectAll(table: string): Promise<any[]> {
+  const out: any[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await db.from(table).select("*").range(from, from + PAGE - 1);
+    if (error) throw new Error(`${table}: ${error.message}`);
+    const rows = data ?? [];
+    out.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return out;
+}
+
 async function loadAll(): Promise<StoreState | null> {
   try {
     const [c, s, t, m, mo, sch, st, ind, ad, ob, an, se, at, gr] = await Promise.all([
-      db.from("classes").select("*"),
-      db.from("subjects").select("*"),
-      db.from("teachers").select("*"),
-      db.from("materials").select("*"),
-      db.from("modules").select("*"),
-      db.from("schedule").select("*"),
-      db.from("students").select("*"),
-      db.from("indicators").select("*"),
-      db.from("adab_titles").select("*"),
-      db.from("observations").select("*"),
-      db.from("announcements").select("*"),
-      db.from("settings").select("*"),
-      db.from("attendance").select("*"),
-      db.from("grades").select("*"),
+      selectAll("classes"),
+      selectAll("subjects"),
+      selectAll("teachers"),
+      selectAll("materials"),
+      selectAll("modules"),
+      selectAll("schedule"),
+      selectAll("students"),
+      selectAll("indicators"),
+      selectAll("adab_titles"),
+      selectAll("observations"),
+      selectAll("announcements"),
+      selectAll("settings"),
+      selectAll("attendance"),
+      selectAll("grades"),
     ]);
     const announcements: Record<string, string> = {};
-    (an.data ?? []).forEach((r: any) => { announcements[r.class_id] = r.text; });
+    an.forEach((r: any) => { announcements[r.class_id] = r.text; });
     const settings: Record<string, string> = {};
-    (se.data ?? []).forEach((r: any) => { settings[r.key] = r.value; });
+    se.forEach((r: any) => { settings[r.key] = r.value; });
     return {
-      classes: (c.data ?? []).map(fromRow.classes),
-      subjects: (s.data ?? []).map(fromRow.subjects),
-      teachers: (t.data ?? []).map(fromRow.teachers),
-      materials: (m.data ?? []).map(fromRow.materials),
-      modules: (mo.data ?? []).map(fromRow.modules),
-      schedule: (sch.data ?? []).map(fromRow.schedule),
-      students: (st.data ?? []).map(fromRow.students),
-      indicators: (ind.data ?? []).map(fromRow.indicators),
-      adabTitles: (ad.data ?? []).map((r: any) => r.title),
-      observations: (ob.data ?? []).map(fromRow.observations),
-      attendance: (at.data ?? []).map(fromRow.attendance),
-      grades: (gr.data ?? []).map(fromRow.grades),
+      classes: c.map(fromRow.classes),
+      subjects: s.map(fromRow.subjects),
+      teachers: t.map(fromRow.teachers),
+      materials: m.map(fromRow.materials),
+      modules: mo.map(fromRow.modules),
+      schedule: sch.map(fromRow.schedule),
+      students: st.map(fromRow.students),
+      indicators: ind.map(fromRow.indicators),
+      adabTitles: ad.map((r: any) => r.title),
+      observations: ob.map(fromRow.observations),
+      attendance: at.map(fromRow.attendance),
+      grades: gr.map(fromRow.grades),
       announcements,
       adminCode: settings.adminCode ?? initialState.adminCode,
     };
   } catch (e) {
+    // A failed/partial load must NEVER be treated as "cloud is empty".
     console.error("[cloud] load failed", e);
     return null;
   }
 }
+
 
 async function seedAll(s: StoreState) {
   await Promise.all([
