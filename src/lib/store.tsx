@@ -538,10 +538,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     refresh: async () => {
       if (pendingWrites.current > 0) return;
-      const loaded = await loadAll();
+      const loaded = await throttledLoadAll();
       if (!loaded || pendingWrites.current > 0) return;
       applyRemote(loaded);
     },
+
 
     uid,
   };
