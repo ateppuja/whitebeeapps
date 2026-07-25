@@ -452,14 +452,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     set: (key, value) => {
       const previous = state[key];
       setState((s) => ({ ...s, [key]: value }));
-      if (!skipSync.current) void syncKey(key, value, previous);
+      if (!skipSync.current) track(syncKey(key, value, previous));
     },
     update: (updater) => {
       setState((s) => {
         const patch = updater(s);
         const next = { ...s, ...patch };
         if (!skipSync.current) {
-          (Object.keys(patch) as (keyof StoreState)[]).forEach((k) => void syncKey(k, next[k], s[k]));
+          (Object.keys(patch) as (keyof StoreState)[]).forEach((k) => track(syncKey(k, next[k], s[k])));
         }
         return next;
       });
@@ -470,49 +470,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const rest = s.observations.filter((o) => !(o.studentId === rec.studentId && o.month === rec.month));
         return { ...s, observations: [...rest, rec] };
       });
+      pendingWrites.current += 1;
+      lastWriteAt.current = Date.now();
       const { error } = await db
         .from("observations")
         .upsert(toRow.observations(rec), { onConflict: "student_id,month" });
+      pendingWrites.current -= 1;
+      lastWriteAt.current = Date.now();
       if (error) {
         console.error("[cloud] save observation failed", error);
         setState((s) => ({ ...s, observations: previous }));
         return false;
       }
-      const loaded = await loadAll();
-      if (loaded) {
-        skipSync.current = true;
-        setState(loaded);
-        setTimeout(() => { skipSync.current = false; }, 0);
-      }
+      // No full reload here: the local record already matches what was written,
+      // and pulling the whole cloud could clobber other unsaved input.
       return true;
     },
     saveAttendance: async (rec) => {
+      const previous = state.attendance;
       setState((s) => {
         const rest = s.attendance.filter((a) => !(a.studentId === rec.studentId && a.date === rec.date));
         return { ...s, attendance: [...rest, rec] };
       });
+      pendingWrites.current += 1;
+      lastWriteAt.current = Date.now();
       const { error } = await db
         .from("attendance")
         .upsert(toRow.attendance(rec), { onConflict: "student_id,date" });
+      pendingWrites.current -= 1;
+      lastWriteAt.current = Date.now();
       if (error) {
         console.error("[cloud] save attendance failed", error);
-        const loaded = await loadAll();
-        if (loaded) {
-          skipSync.current = true;
-          setState(loaded);
-          setTimeout(() => { skipSync.current = false; }, 0);
-        }
+        setState((s) => ({ ...s, attendance: previous }));
         return false;
       }
       return true;
     },
     refresh: async () => {
+      if (pendingWrites.current > 0) return;
       const loaded = await loadAll();
-      if (!loaded) return;
-      skipSync.current = true;
-      setState(loaded);
-      setTimeout(() => { skipSync.current = false; }, 0);
+      if (!loaded || pendingWrites.current > 0) return;
+      applyRemote(loaded);
     },
+
     uid,
   };
 
