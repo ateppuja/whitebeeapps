@@ -349,13 +349,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const track = (p: Promise<unknown>) => {
     pendingWrites.current += 1;
     lastWriteAt.current = Date.now();
+    invalidateLoadCache();
     void Promise.resolve(p)
       .catch((e) => console.error("[cloud] write failed", e))
       .finally(() => {
         pendingWrites.current -= 1;
         lastWriteAt.current = Date.now();
+        invalidateLoadCache();
       });
   };
+
 
   const applyRemote = (loaded: StoreState) => {
     skipSync.current = true;
