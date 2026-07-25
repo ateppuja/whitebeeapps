@@ -65,7 +65,7 @@ function LoginPage() {
     e.preventDefault();
     if (role === "admin") {
       if (adminInput.trim() !== adminCode) {
-        await swal.fire({ icon: "error", title: "Kode admin salah", text: `Demo kode: ${adminCode}` });
+        await swal.fire({ icon: "error", title: "Kode admin salah" });
         return;
       }
       login("admin", "Admin Sekolah");
@@ -140,7 +140,7 @@ function LoginPage() {
           </div>
 
           <h1 className="text-2xl font-bold">Masuk ke akun Anda</h1>
-          <p className="text-sm text-muted-foreground mt-1">Pilih peran untuk demo dan mulai eksplorasi.</p>
+          <p className="text-sm text-muted-foreground mt-1">Pilih peran untuk mulai eksplorasi.</p>
 
           <div className="mt-6 grid grid-cols-3 gap-2">
             {ROLES.map((r) => {
@@ -168,7 +168,6 @@ function LoginPage() {
               <div>
                 <Label htmlFor="adminCode">Kode Khusus Admin</Label>
                 <Input id="adminCode" type="password" placeholder="Masukkan kode admin" value={adminInput} onChange={(e) => setAdminInput(e.target.value)} className="mt-1.5 font-mono" />
-                <p className="text-xs text-muted-foreground mt-1">Demo kode: <span className="font-mono">{adminCode}</span></p>
               </div>
             )}
 
