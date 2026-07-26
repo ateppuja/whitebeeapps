@@ -1,27 +1,68 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useStore } from "@/lib/store";
 import { Video, FileText, ClipboardList, CalendarDays } from "lucide-react";
 
 export const Route = createFileRoute("/student/today")({ component: TodayPage });
 
+// Tanggal lokal (WIB), bukan UTC — agar materi tidak "geser" sehari.
+function localDate(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function formatID(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  return new Date(y, m - 1, d).toLocaleDateString("id-ID", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+}
+
 function TodayPage() {
   const { materials, subjects, students, user } = useStore();
   const me = students.find((s) => s.id === user?.studentId);
-  const today = new Date().toISOString().slice(0, 10);
-  const list = materials.filter((m) => m.publishDate === today && m.classId === me?.classId);
+  const today = localDate();
+  const [date, setDate] = useState(today);
+
+  const list = useMemo(
+    () =>
+      materials
+        .filter((m) => m.classId === me?.classId && m.publishDate === date)
+        .sort((a, b) => a.title.localeCompare(b.title)),
+    [materials, me?.classId, date],
+  );
   const subjectName = (id: string) => subjects.find((s) => s.id === id)?.name ?? "-";
 
   return (
     <div>
-      <PageHeader title="Pelajaran Hari Ini" description={`Materi & tugas untuk ${today}`} />
+      <PageHeader title="Pelajaran Hari Ini" description={`Materi & tugas untuk ${formatID(date)}`} />
+
+      <Card className="mb-4">
+        <CardContent className="p-4 flex flex-wrap items-end gap-3">
+          <div>
+            <Label htmlFor="tgl">Tanggal</Label>
+            <Input id="tgl" type="date" value={date} onChange={(e) => setDate(e.target.value || today)} className="mt-1.5 w-[190px]" />
+          </div>
+          {date !== today && (
+            <button type="button" onClick={() => setDate(today)} className="h-10 rounded-md border px-3 text-sm font-medium hover:bg-accent">
+              Kembali ke hari ini
+            </button>
+          )}
+          <div className="ml-auto text-sm text-muted-foreground">{list.length} materi</div>
+        </CardContent>
+      </Card>
+
       {list.length === 0 ? (
         <Card><CardContent className="p-8 text-center">
           <CalendarDays className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">Tidak ada materi untuk hari ini. Selamat beristirahat!</p>
+          <p className="text-muted-foreground">Tidak ada materi pada {formatID(date)}.</p>
         </CardContent></Card>
       ) : (
+
         <div className="grid gap-3 md:grid-cols-2">
           {list.map((m) => (
             <Card key={m.id}>
