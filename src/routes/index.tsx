@@ -113,7 +113,7 @@ function LoginPage() {
           <div className="relative">
             <div className="flex items-center gap-3">
               <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-sidebar-border/40 overflow-hidden">
-                <img src={logoAsset.url} alt="WhiteBee" className="h-12 w-12 object-contain" />
+                <BookOpen className="h-8 w-8 text-primary" />
               </div>
               <div>
                 <div className="font-extrabold text-lg tracking-tight">White Bee School of Life</div>
@@ -133,8 +133,8 @@ function LoginPage() {
 
         <div className="p-6 md:p-10">
           <div className="mb-6 md:hidden flex items-center gap-2">
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-white shadow ring-1 ring-border overflow-hidden">
-              <img src={logoAsset.url} alt="WhiteBee" className="h-10 w-10 object-contain" />
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-white shadow ring-1 ring-border overflow-hidden text-primary">
+              <BookOpen className="h-6 w-6" />
             </div>
             <div className="font-bold">WhiteBee LMS</div>
           </div>
