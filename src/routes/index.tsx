@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, Shield, BookOpen, User } from "lucide-react";
-import logoAsset from "@/assets/whitebee-logo.png.asset.json";
+import logoAsset from "@/assets/whitebee-logo-new.png.asset.json";
 
 
 export const Route = createFileRoute("/")({ component: LoginPage });
