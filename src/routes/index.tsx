@@ -113,7 +113,7 @@ function LoginPage() {
           <div className="relative">
             <div className="flex items-center gap-3">
               <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-sidebar-border/40 overflow-hidden">
-                <img src={logoAsset.url} alt="WhiteBee" className="h-12 w-12 object-contain" />
+                <BookOpen className="h-8 w-8 text-primary" />
               </div>
               <div>
                 <div className="font-extrabold text-lg tracking-tight">White Bee School of Life</div>
