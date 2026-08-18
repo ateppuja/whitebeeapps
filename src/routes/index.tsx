@@ -133,8 +133,8 @@ function LoginPage() {
 
         <div className="p-6 md:p-10">
           <div className="mb-6 md:hidden flex items-center gap-2">
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-white shadow ring-1 ring-border overflow-hidden">
-              <img src={logoAsset.url} alt="WhiteBee" className="h-10 w-10 object-contain" />
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-white shadow ring-1 ring-border overflow-hidden text-primary">
+              <BookOpen className="h-6 w-6" />
             </div>
             <div className="font-bold">WhiteBee LMS</div>
           </div>
