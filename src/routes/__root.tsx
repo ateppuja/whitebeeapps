@@ -89,8 +89,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
       { name: "twitter:title", content: "WhiteBee Apps" },
       { name: "twitter:description", content: "Sistem Manajemen Pembelajaran dengan Matriks Observasi Adab & Tarbiyah." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/637c396d-c3a1-46fb-85e7-b1462bb3a6c3/id-preview-dafe3d0d--30798963-a2fa-4ace-9eb0-6cbeb81598f2.lovable.app-1784466261605.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/637c396d-c3a1-46fb-85e7-b1462bb3a6c3/id-preview-dafe3d0d--30798963-a2fa-4ace-9eb0-6cbeb81598f2.lovable.app-1784466261605.png" },
+      { property: "og:image", content: "/logo.png" },
+      { name: "twitter:image", content: "/logo.png" },
     ],
     links: [
       {
