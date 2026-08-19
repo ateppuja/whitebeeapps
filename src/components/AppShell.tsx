@@ -22,7 +22,7 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import logoAsset from "@/assets/whitebee-logo.png.asset.json";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
