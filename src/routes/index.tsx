@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, Shield, BookOpen, User } from "lucide-react";
-import logoAsset from "@/assets/whitebee-logo-new.png.asset.json";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 
 export const Route = createFileRoute("/")({ component: LoginPage });
@@ -143,7 +143,7 @@ function LoginPage() {
           <p className="text-sm text-muted-foreground mt-1">'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            I have approved the plan</p>
+                                            ganti dengan logo buku</p>
 
           <div className="mt-6 grid grid-cols-3 gap-2">
             {ROLES.map((r) => {
