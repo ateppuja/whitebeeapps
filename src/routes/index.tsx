@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, Shield, BookOpen, User } from "lucide-react";
-import logoAsset from "@/assets/whitebee-logo-new.png.asset.json";
+import logoAsset from "@/assets/logo.png.asset.json";
 
 
 export const Route = createFileRoute("/")({ component: LoginPage });
@@ -113,7 +113,7 @@ function LoginPage() {
           <div className="relative">
             <div className="flex items-center gap-3">
               <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white shadow-lg ring-1 ring-sidebar-border/40 overflow-hidden">
-                <BookOpen className="h-8 w-8 text-primary" />
+                <img src={logoAsset.url} alt="White Bee Logo" className="h-10 w-10 object-contain" />
               </div>
               <div>
                 <div className="font-extrabold text-lg tracking-tight">White Bee School of Life</div>
@@ -134,7 +134,7 @@ function LoginPage() {
         <div className="p-6 md:p-10">
           <div className="mb-6 md:hidden flex items-center gap-2">
             <div className="grid h-11 w-11 place-items-center rounded-xl bg-white shadow ring-1 ring-border overflow-hidden text-primary">
-              <BookOpen className="h-6 w-6" />
+              <img src={logoAsset.url} alt="White Bee Logo" className="h-8 w-8 object-contain" />
             </div>
             <div className="font-bold">WhiteBee LMS</div>
           </div>
@@ -143,7 +143,7 @@ function LoginPage() {
           <p className="text-sm text-muted-foreground mt-1">'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            I have approved the plan</p>
+                                            ganti gambar logo dengan logo buku yang sesuai agar muncul di github</p>
 
           <div className="mt-6 grid grid-cols-3 gap-2">
             {ROLES.map((r) => {
