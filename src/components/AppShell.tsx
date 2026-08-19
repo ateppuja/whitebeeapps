@@ -101,7 +101,7 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
       <aside className="hidden md:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
         <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white shadow-md ring-1 ring-sidebar-border/40 overflow-hidden">
-            <img src={logoAsset.url} alt="WhiteBee" className="h-11 w-11 object-contain" />
+            <BookOpen className="h-7 w-7 text-primary" />
           </div>
           <div className="min-w-0">
             <div className="text-sm font-extrabold tracking-tight truncate">WhiteBee LMS</div>
@@ -171,7 +171,7 @@ export function AppShell({ role, children }: { role: Role; children: ReactNode }
         <header className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card">
           <div className="flex items-center gap-2">
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-white shadow ring-1 ring-border overflow-hidden">
-              <img src={logoAsset.url} alt="WhiteBee" className="h-8 w-8 object-contain" />
+              <BookOpen className="h-5 w-5 text-primary" />
             </div>
             <div className="text-sm font-bold">WhiteBee LMS</div>
           </div>
