@@ -143,7 +143,7 @@ function LoginPage() {
           <p className="text-sm text-muted-foreground mt-1">'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
                                         
                                             
-                                            pada tampilan tersebut gunakan tab lanjut jika lebih dari 10 baris</p>
+                                            ubah dengan kata-kata , Berdoa Sebelum Belajar</p>
 
           <div className="mt-6 grid grid-cols-3 gap-2">
             {ROLES.map((r) => {
