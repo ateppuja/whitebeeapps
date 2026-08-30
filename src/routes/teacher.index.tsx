@@ -238,7 +238,7 @@ function MaterialsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((m) => (
+              {pagedMaterials.map((m) => (
                 <TableRow key={m.id}>
                   <TableCell className="font-medium">{m.title}</TableCell>
                   <TableCell>{subjectName(m.subjectId)}</TableCell>
@@ -254,6 +254,22 @@ function MaterialsPage() {
               )}
             </TableBody>
           </Table>
+          {pageCount > 1 && (
+            <div className="border-t p-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-xs text-muted-foreground">
+                Menampilkan {Number(page) * PAGE_SIZE + 1}–{Math.min((Number(page) + 1) * PAGE_SIZE, filtered.length)} dari {filtered.length} data
+              </div>
+              <Tabs value={page} onValueChange={setPage}>
+                <TabsList className="flex-wrap h-auto">
+                  {Array.from({ length: pageCount }, (_, i) => (
+                    <TabsTrigger key={i} value={String(i)} className="text-xs px-2.5 py-1">
+                      {i + 1}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
         </CardContent>
       </Card>
 
