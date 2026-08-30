@@ -9,11 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStore, type Material } from "@/lib/store";
 import { confirmDelete, successToast, swal } from "@/lib/swal";
 import { Pencil, Plus, Search, Trash2, Megaphone, FileDown, ClipboardList } from "lucide-react";
 import { NoClassSelected } from "@/components/NoClassSelected";
 import * as XLSX from "xlsx";
+
+const PAGE_SIZE = 6;
 
 export const Route = createFileRoute("/teacher/")({ component: MaterialsPage });
 
@@ -53,6 +56,18 @@ function MaterialsPage() {
       }),
     [classMaterials, filterSubject, q]
   );
+
+  const [page, setPage] = useState("0");
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const pagedMaterials = useMemo(() => {
+    const idx = Number(page);
+    const start = idx * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
+
+  useEffect(() => {
+    if (Number(page) >= pageCount) setPage("0");
+  }, [page, pageCount]);
 
   const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -223,7 +238,7 @@ function MaterialsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((m) => (
+              {pagedMaterials.map((m) => (
                 <TableRow key={m.id}>
                   <TableCell className="font-medium">{m.title}</TableCell>
                   <TableCell>{subjectName(m.subjectId)}</TableCell>
@@ -239,6 +254,22 @@ function MaterialsPage() {
               )}
             </TableBody>
           </Table>
+          {pageCount > 1 && (
+            <div className="border-t p-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-xs text-muted-foreground">
+                Menampilkan {Number(page) * PAGE_SIZE + 1}–{Math.min((Number(page) + 1) * PAGE_SIZE, filtered.length)} dari {filtered.length} data
+              </div>
+              <Tabs value={page} onValueChange={setPage}>
+                <TabsList className="flex-wrap h-auto">
+                  {Array.from({ length: pageCount }, (_, i) => (
+                    <TabsTrigger key={i} value={String(i)} className="text-xs px-2.5 py-1">
+                      {i + 1}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
         </CardContent>
       </Card>
 
