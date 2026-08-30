@@ -9,11 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStore, type Material } from "@/lib/store";
 import { confirmDelete, successToast, swal } from "@/lib/swal";
 import { Pencil, Plus, Search, Trash2, Megaphone, FileDown, ClipboardList } from "lucide-react";
 import { NoClassSelected } from "@/components/NoClassSelected";
 import * as XLSX from "xlsx";
+
+const PAGE_SIZE = 6;
 
 export const Route = createFileRoute("/teacher/")({ component: MaterialsPage });
 
