@@ -57,6 +57,18 @@ function MaterialsPage() {
     [classMaterials, filterSubject, q]
   );
 
+  const [page, setPage] = useState("0");
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const pagedMaterials = useMemo(() => {
+    const idx = Number(page);
+    const start = idx * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
+
+  useEffect(() => {
+    if (Number(page) >= pageCount) setPage("0");
+  }, [page, pageCount]);
+
   const className = classes.find((c) => c.id === activeClassId)?.name ?? "";
   const currentMonth = new Date().toISOString().slice(0, 7);
   const classStudents = useMemo(
