@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useStore } from "@/lib/store";
+import { useStore, fetchAllDataForBackup } from "@/lib/store";
 import { successToast } from "@/lib/swal";
 import Swal from "sweetalert2";
 import { Users, School, KeyRound, Download, Upload } from "lucide-react";
@@ -49,9 +49,21 @@ function AdminDashboard() {
     count: students.filter((s) => s.classId === c.id).length,
   }));
 
-  const handleBackup = () => {
+  const handleBackup = async () => {
+    const fresh = await fetchAllDataForBackup();
+    const source = (fresh ?? (store as unknown)) as Record<string, unknown>;
     const data: Record<string, unknown> = { _exportedAt: new Date().toISOString(), _version: 1 };
-    for (const k of BACKUP_KEYS) data[k] = (store as unknown as Record<string, unknown>)[k];
+    const missing: string[] = [];
+    for (const k of BACKUP_KEYS) {
+      const v = source[k] ?? (store as unknown as Record<string, unknown>)[k];
+      if (v === undefined || v === null) missing.push(k);
+      data[k] = v ?? null;
+    }
+    const counts = BACKUP_KEYS.map((k) => {
+      const v = data[k];
+      const n = Array.isArray(v) ? v.length : typeof v === "object" && v ? Object.keys(v).length : 1;
+      return `${k}: ${n}`;
+    });
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -59,8 +71,15 @@ function AdminDashboard() {
     a.download = `whitebee-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    successToast("Backup diunduh");
+    await Swal.fire({
+      title: "Backup diunduh",
+      icon: "success",
+      html: `<div style="text-align:left;font-size:12px;line-height:1.6">${counts.join("<br/>")}${
+        missing.length ? `<br/><b>Perlu diperiksa:</b> ${missing.join(", ")}` : ""
+      }</div>`,
+    });
   };
+
 
   const handleRestore = async (file: File) => {
     const confirm = await Swal.fire({
