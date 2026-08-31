@@ -289,6 +289,16 @@ async function loadAll(): Promise<StoreState | null> {
   }
 }
 
+// Fresh, complete snapshot of every table — used by Admin JSON backup so the
+// export never relies on a possibly-stale local cache.
+export async function fetchAllDataForBackup(): Promise<StoreState | null> {
+  return loadAll();
+}
+
+export type { StoreState };
+
+
+
 
 async function seedAll(s: StoreState) {
   await Promise.all([
