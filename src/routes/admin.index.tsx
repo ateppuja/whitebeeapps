@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useStore } from "@/lib/store";
+import { useStore, fetchAllDataForBackup } from "@/lib/store";
 import { successToast } from "@/lib/swal";
 import Swal from "sweetalert2";
 import { Users, School, KeyRound, Download, Upload } from "lucide-react";
@@ -57,7 +57,7 @@ function AdminDashboard() {
     for (const k of BACKUP_KEYS) {
       const v = source[k] ?? (store as unknown as Record<string, unknown>)[k];
       if (v === undefined || v === null) missing.push(k);
-      data[k] = v ?? (Array.isArray((initialShape as Record<string, unknown>)[k]) ? [] : null);
+      data[k] = v ?? null;
     }
     const counts = BACKUP_KEYS.map((k) => {
       const v = data[k];
